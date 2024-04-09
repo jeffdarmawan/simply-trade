@@ -259,14 +259,15 @@ def makeFibLevels(fig, stockDF):
     if (fibLevels[-1] < fractal) and (fractal < absMax):
          fibLevels.append(fractal)  
      
- 
-    for i in range(len(fibLevels)):
-        fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = [fibLevels[i] for val in range(len(stockDF))],
-                             line = dict(color = "black"),
-                             name = "Sup/Res: " + str(round(fibLevels[i], 2)),
-                             hoverinfo = "skip",
-                             opacity = 0.3))
+    # TODO: currently not working
+    # are we using this though?
+    # for i in range(len(fibLevels)):
+    #     fig.add_trace(go.Scatter(x = stockDF.index,
+    #                          y = [fibLevels[i] for val in range(len(stockDF))],
+    #                          line = dict(color = "black"),
+    #                          name = "Sup/Res: " + str(round(fibLevels[i], 2)),
+    #                          hoverinfo = "skip",
+    #                          opacity = 0.3))
      
     return fig
  
@@ -338,8 +339,8 @@ stockApp.layout = html.Div([
                 html.Button("Submit", id = "btnSubmit")
                 ]),
 
-            # refresh every 5 second (minimum OANDA refresh rate)
-            dcc.Interval(id="refresh", interval=5 * 1000, n_intervals=0),
+            # refresh every 1 second
+            dcc.Interval(id="refresh", interval=1 * 1000, n_intervals=0),
                       
         ])
 
