@@ -212,15 +212,16 @@ def makeLevels(fig, stockDF):
  
     levels.sort()
      
- 
-    #Plots the key levels within levels 
-    for i in range(len(levels)):
-        fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = [levels[i] for val in range(len(stockDF))],
-                             line = dict(color = "black"),
-                             name = "Sup/Res: " + str(round(levels[i], 2)),
-                             hoverinfo = "skip",
-                             opacity = 0.3))
+    # TODO: currently not working
+    # are we using this though?
+    # Plots the key levels within levels 
+    # for i in range(len(levels)):
+    #     fig.add_trace(go.Scatter(x = stockDF.index,
+    #                          y = [levels[i] for val in range(len(stockDF))],
+    #                          line = dict(color = "black"),
+    #                          name = "Sup/Res: " + str(round(levels[i], 2)),
+    #                          hoverinfo = "skip",
+    #                          opacity = 0.3))
  
     return fig
 def findAbsMax(stockDF):
