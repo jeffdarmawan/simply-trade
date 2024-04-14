@@ -87,11 +87,12 @@ class OandaAPI:
         return order_history
     
     def process_orders(self, capital=100000):
+        df = self.order_history.copy()
         df = df[df['Realized P&L'] != 0]
         df['Open Time'] = pd.to_datetime(df['Open Time'])
         df['amount'] = pd.to_numeric(df['Realized P&L'], errors='coerce').fillna(0)
         df['cumulative'] = capital + df['amount'].cumsum()
-        df.set_index('time', inplace=True)
+        df.set_index('Open Time', inplace=True)
         self.realized_orders = df
 
     def calculate_drawdowns(self):
