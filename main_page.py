@@ -47,8 +47,9 @@ if st.sidebar.button("AUD/USD 🇦🇺🇺🇸", on_click=None, type="secondary"
 
 st.sidebar.markdown("---")
 
-summary_info_sidebar = api_client.get_account_summary()
-st.sidebar.dataframe(data=summary_info_sidebar,use_container_width=True)
+# TODO: move where?
+# summary_info_sidebar = api_client.get_account_summary()
+# st.sidebar.dataframe(data=summary_info_sidebar,use_container_width=True)
 
 
 # ************************************** Trading Strategy Buttons ****************************************
