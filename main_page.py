@@ -7,7 +7,9 @@ from Relative_Functions import OandaAPI, Delta_Data
 from live_trading.status import Status, Models
 import requests
 
-access_token = "f176a52ece6296e57df035992ee409d3-d299d6aaafa65622d5418531ebe83a00"
+access_token = "3f0f1b513d44797ff63c09d9da612561-6480f119d75e63cea1e420564d12b6f1"
+account_id = "101-003-28603773-001"
+
 api_client = OandaAPI(access_token=access_token)
 api_delta = Delta_Data()
 
