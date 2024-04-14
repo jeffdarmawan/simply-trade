@@ -62,6 +62,17 @@ def send_request(status: Status):
         print(f"Error: An error occurred during the request - {e}")
 
 
+# input
+# - model:
+#    - 1 min
+#    - 15 min
+#    - 5 min
+# - take profit
+#    - 
+# - stop loss
+# - granularity
+# - trade_cycle
+
 status = Status.Inactive
 
 if st.sidebar.button("Start", key="start_button", help="Click to start", use_container_width=True):

@@ -36,17 +36,38 @@ class LiveTrading:
         with self.status_lock:
             self.status = new_status
 
+    def start(self, params):
+        while True:
+            print("current status: ", self.get_status())
+            # if self.get_status() == Status.Active:
+            # print(f"Thread ID: {threading.get_ident()}")
+            # print(a)
+            # a += 1
+            trade_attempt(
+                take_profit=params['tp'],
+                stop_loss=params['sl'],
+                status=self.status)
+                
+            
+            time.sleep(2)
+
+
 
 # app function for waitress
 def create_app():
     app = Flask(__name__)
 
     ltrading = LiveTrading()
-    ltrading.start()
 
     @app.route('/activate', methods=['POST'])
     def activate():
+        # custom tp/sl
+        tp = request.json.get('tp')
+        sl = request.json.get('sl')
+
         ltrading.set_status(Status.Active)
+        ltrading.start(params={'tp': tp, 'sl': sl})
+
         print("activated")
         return "Print and addition activated\n"
 

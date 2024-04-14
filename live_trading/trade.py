@@ -7,7 +7,7 @@ import oandapyV20.endpoints.pricing as pricing
 import pandas as pd
 import numpy as np
 import joblib
-from status import Status
+from status import Status, Models
 
 # ====== OANDA account details ======
 access_token = "3f0f1b513d44797ff63c09d9da612561-6480f119d75e63cea1e420564d12b6f1"
@@ -59,6 +59,7 @@ default_lookback_count = 20
 
 def trade_attempt(
         status: Status = Status.Inactive,
+        model: Models = Models.FiveMin,
         usd_pairs: list = default_usd_pairs,
         take_profit: float = default_take_profit,
         stop_loss: float = default_stop_loss,
@@ -77,6 +78,13 @@ def trade_attempt(
                 price = get_current_price(instrument)
                 price_df = fetch_candlestick_data(instrument, lookback_count)
                 
+                # === some model logic
+                
+                # if model == Models.FiveMin:
+                    # get_top10_features_5mins()
+                # elif model == Model.FifteenMin:
+                    # get_top10_features_15mins()
+
                 top10_df3 = get_top10_features(price_df["m_open"], price_df["m_high"], price_df["m_low"], price_df["m_close"],model_15mins_features)
                 price_df = pd.concat([price_df, top10_df3], axis=1)
                 model_data = price_df[model_15mins_features]
@@ -88,6 +96,9 @@ def trade_attempt(
                 # save the predicted y direction
                 #   1 is positive => buy t+1, 0 is not positive => sell t+1
                 y_pred = model.predict(model_data)
+
+                # === end of model logic
+
                 price_df["prediction_on_next_close"] = [1 if x > 0 else -1 for x in y_pred]
                 #find the last signal
                 signal = price_df["prediction_on_next_close"].iloc[-1]
