@@ -12,7 +12,8 @@ import plotly.graph_objs as go
  
 # Override Yahoo Finance 
 yf.pdr_override()
- 
+
+#commit
 # !pip install ta
  
 from datetime import date
