@@ -30,8 +30,34 @@ def fetch_transactions(open_date, current_date):
     }
     r = transactions.TransactionList(accountID=account_id, params=params)
     data = client.request(r)
-    return data['transactions']
 
+    all_transactions = []
+    for page in data['pages']:
+        id_range = get_from_to_values(page)
+        r = transactions.TransactionIDRange(accountID=account_id, params={'from': id_range['from'], 'to': id_range['to']})
+        data = client.request(r)
+        all_transactions.extend(data['transactions'])
+
+    return all_transactions
+
+def get_from_to_values(text):
+    from urllib.parse import urlparse
+
+    # Parse the URL
+    parsed_url = urlparse(text)
+    query_params = parsed_url.query.split('&')
+
+    # Extract 'from' and 'to' values
+    result = {}
+    for param in query_params:
+        key, value = param.split('=')
+        if key.lower() == 'from':
+            result['from'] = int(value)
+        elif key.lower() == 'to':
+            result['to'] = int(value)
+
+    # Return results or None if not found
+    return result or None
 
 # Process transactions to calculate equity
 def process_transactions(transactions,capital):
@@ -62,6 +88,8 @@ def get_current_balance():
     return None
 
 def calculate_annualised_returns(capital, total_trading_days):
+    if total_trading_days == 0:
+        return 0
     
     current_balance = get_current_balance()
     annualised_returns = ( (current_balance/capital * 100 ) / int(total_trading_days) )* 252
@@ -76,22 +104,34 @@ def fetch_balance_changes(open_date, current_date):
     params = {
         "from": open_date,
         "to": current_date,
-        "type": "DAILY"
+        "type": "ORDER_FILL"
     }
     r = transactions.TransactionList(accountID=account_id, params=params)
     data = client.request(r)
-    df = pd.DataFrame(data['transactions'])
+
+    # gather transactions
+    all_transactions = []
+    for page in data['pages']:
+        id_range = get_from_to_values(page)
+        r = transactions.TransactionIDRange(accountID=account_id, params={'from': id_range['from'], 'to': id_range['to']})
+        data = client.request(r)
+        all_transactions.extend(data['transactions'])
+
+    # gather daily changes
+    df = pd.DataFrame(all_transactions)
     if not df.empty:
-        df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+        # pd.to_numeric(df['accountBalance'], errors='coerce')
+        df['amount'] = pd.to_numeric(df['accountBalance'], errors='coerce')
         df['time'] = pd.to_datetime(df['time'])
         df.set_index('time', inplace=True)
-        df = df.resample('D').sum()  # Sum daily changes
+        df = df.resample('D').last()  # end of day balance
+
     return df
 
 def calculate_sharpe_ratio(df):
     # The risk-free daily rate assume 1% annual rate
     risk_free_rate = 0.01 / 365
-    df['excess_daily_return'] = df['amount'] - risk_free_rate
+    df['excess_daily_return'] = df['amount'] - risk_free_rate # so amount should be the daily return
     
     # Mean of excess returns
     mean_excess_return = df['excess_daily_return'].mean()
@@ -110,6 +150,9 @@ def fetch_closed_trades():
     return resp['trades']
 
 def calculate_win_rate_from_trades(trades):
+    if len(trades) == 0:
+        return 0
+
     wins = sum(1 for trade in trades if float(trade['realizedPL']) > 0)
     losses = sum(1 for trade in trades if float(trade['realizedPL']) < 0)
     total_trades = wins + losses

@@ -86,7 +86,7 @@ def trade_attempt(
             positions_dict = get_open_positions()
 
             for instrument in usd_pairs:
-
+                
                  # === Model Selection
                 price = get_current_price(instrument)
                 if model == Models.OneMin:
@@ -115,7 +115,7 @@ def trade_attempt(
                 signal = price_df["prediction_on_next_close"].iloc[-1]
                 positions_dict = get_open_positions()
                 position_type = check_instrument_positions(positions_dict,instrument)
-                
+
                 #Determine position and create market order
 
                 if position_type == "None": 
@@ -168,12 +168,14 @@ def trade_attempt(
             #calculate returns 
             cycle_datetime = datetime.now().date()
             trade_days = (open_datetime - cycle_datetime).days
+
             annualised_returns = calculate_annualised_returns(opening_balance, trade_days)
             #print( "Annualised return is ", round(annualised_returns, 2) )
 
             #calculate draw_down
+            start_time = datetime(2020, 5, 17)
             transactions = fetch_transactions(start_time, datetime.now())
-            df_equity = process_transactions(transactions)
+            df_equity = process_transactions(transactions, get_current_balance())
             df_drawdown = calculate_drawdowns(df_equity)
             max_drawdown = df_drawdown['drawdown_pct'].max()
             #print(f"Maximum Drawdown: {max_drawdown}%")
@@ -204,7 +206,6 @@ def trade_attempt(
 
         except Exception as e:
             print(f"An error occurred: {e}")
-            #status = 'Inactive'
 
     elif status == Status.Inactive:
         
@@ -218,7 +219,6 @@ def trade_attempt(
 
         except Exception as e:
             print(f"An error occurred: {e}")
-            status = 'Stop'
 
     else: 
         print("Closing all Trades")
