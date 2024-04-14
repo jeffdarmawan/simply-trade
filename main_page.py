@@ -4,41 +4,62 @@ import streamlit as st
 import plotly.graph_objects as go
 from Relative_Functions import OandaAPI, Delta_Data
 
+from live_trading.status import Status, Models
+import requests
+
 access_token = "f176a52ece6296e57df035992ee409d3-d299d6aaafa65622d5418531ebe83a00"
 api_client = OandaAPI(access_token=access_token)
 api_delta = Delta_Data()
 
 st.set_page_config(layout="wide")
 
-current_pair = "BTC_USD"
+# initialize state variables
+if 'current_pair' not in st.session_state:
+    st.session_state['current_pair'] = "BTC_USD"
+
+if 'trading_status' not in st.session_state:
+    st.session_state['trading_status'] = Status.Unknown
+
+def disable_button(button: str):
+    # print("button: ", button)
+    if button == "start_button":
+        return st.session_state['trading_status'] == Status.Active
+    elif button == "pause_button":
+        return st.session_state['trading_status'] != Status.Active or st.session_state['trading_status'] == Status.Unknown
+    elif button == "stop_button":
+        return st.session_state['trading_status'] == Status.Stop or st.session_state['trading_status'] == Status.Unknown
+
 # ********************************************* sidebar begin *********************************************
 st.sidebar.title("Operation Panel")
 
 if st.sidebar.button("EUR-USD 🇪🇺🇺🇸", on_click=None, type="secondary", use_container_width=True):
-    st.sidebar.write("You have selected EUR-USD 🇪🇺🇺🇸")
-    current_pair = "EUR_USD"
+    # st.sidebar.write("You have selected EUR-USD 🇪🇺🇺🇸")
+    st.session_state['current_pair'] = "EUR_USD"
 if st.sidebar.button("USD/JPY 🇺🇸🇯🇵", on_click=None, type="secondary", use_container_width=True):
-    st.sidebar.write("You have selected USD/JPY 🇺🇸🇯🇵")
-    current_pair = "USD_JPY"
+    # st.sidebar.write("You have selected USD/JPY 🇺🇸🇯🇵")
+    st.session_state['current_pair'] = "USD_JPY"
 if st.sidebar.button("GBP/USD 🇬🇧🇺🇸", on_click=None, type="secondary", use_container_width=True):
-    st.sidebar.write("You have selected GBP/USD 🇬🇧🇺🇸")
-    current_pair = "GBP_USD"
+    # st.sidebar.write("You have selected GBP/USD 🇬🇧🇺🇸")
+    st.session_state['current_pair'] = "GBP_USD"
 if st.sidebar.button("AUD/USD 🇦🇺🇺🇸", on_click=None, type="secondary", use_container_width=True):
-    st.sidebar.write("You have selected AUD/USD 🇦🇺🇺🇸")
-    current_pair = "AUD_USD"
+    # st.sidebar.write("You have selected AUD/USD 🇦🇺🇺🇸")
+    st.session_state['current_pair'] = "AUD_USD"
 
 st.sidebar.markdown("---")
 
-summary_info_sidebar = api_client.get_account_summary()
-st.sidebar.dataframe(data=summary_info_sidebar,use_container_width=True)
+# TODO: move where?
+# summary_info_sidebar = api_client.get_account_summary()
+# st.sidebar.dataframe(data=summary_info_sidebar,use_container_width=True)
 
 
 # ************************************** Trading Strategy Buttons ****************************************
-from live_trading.status import Status
-import requests
+
 
 # http request to activate the trading strategy
-def send_request(status: Status):
+def send_request(
+        status: Status,
+        model: Models = Models.Unknown,
+        rr_ratio: float = 0.0):
     path = "deactivate"
     if status == Status.Active:
         path = "activate"
@@ -49,10 +70,11 @@ def send_request(status: Status):
     
     try:
         # Send the POST request with error handling
-        response = requests.post(url, json={"status": 1})
+        response = requests.post(url, json={"model": model.value, "rr_ratio": rr_ratio})
         response.raise_for_status()  # Raise an exception for non-200 status codes
 
         print("success")
+        st.session_state['trading_status'] = status
 
     except requests.exceptions.RequestException as e:
         # Handle errors during request execution (e.g., connection issues)
@@ -64,33 +86,45 @@ def send_request(status: Status):
 #    - 1 min
 #    - 15 min
 #    - 5 min
-# - take profit
-#    - 
-# - stop loss
-# - granularity
-# - trade_cycle
+# - risk & reward ra. (take profit/stop loss)
+model_options = {
+    Models.OneMin: "1 min",
+    Models.FiveMin: "5 min",
+    Models.FifteenMin: "15 min",
+    Models.OneHour: "1 hour",
+}
 
-status = Status.Inactive
+selected_model = st.sidebar.selectbox(
+    label="Select model",
+    options=model_options.keys(), # values
+    format_func=lambda x: model_options[x], # display
+    index=2,
+    disabled=disable_button("start_button"),
+)
 
-if st.sidebar.button("Start", key="start_button", help="Click to start", use_container_width=True):
-    status = Status.Active
-    send_request(status)
+rr_ratio = st.sidebar.number_input("Risk/Reward ratio", value=2, placeholder="Insert a number", disabled=disable_button("start_button"))
 
-if st.sidebar.button("Pause", key="pause_button", help="Click to pause", use_container_width=True):
-    status = Status.Inactive
-    send_request(status)
+def trading_buttons_callback(status: Status):
+    global selected_model, rr_ratio
+    send_request(status, selected_model, rr_ratio)
 
-if st.sidebar.button("Stop", key="stop_button", help="Click to stop", use_container_width=True):
-    status = Status.Stop
-    send_request(status)
+st.sidebar.button("Start", key="start_button", help="Click to start", use_container_width=True, disabled=disable_button("start_button"),
+                  on_click=trading_buttons_callback, args=(Status.Active,))
 
-if status == Status.Active:
-    st.sidebar.success("Trading Strategy is Running")
-elif status == Status.Inactive:
-    st.sidebar.success("Trading Strategy is Paused")
-else:
-    st.sidebar.error("Trading Strategy has been Stopped")
+st.sidebar.button("Pause", key="pause_button", help="Click to pause", use_container_width=True, disabled=disable_button("pause_button"),
+                     on_click=trading_buttons_callback, args=(Status.Inactive,))
 
+st.sidebar.button("Stop", key="stop_button", help="Click to stop", use_container_width=True, disabled=disable_button("stop_button"),
+                     on_click=trading_buttons_callback, args=(Status.Stop,)) 
+
+def display_trading_status():
+    if st.session_state['trading_status'] == Status.Active:
+        st.sidebar.success("Trading Strategy is Running")
+    elif st.session_state['trading_status'] == Status.Inactive:
+        st.sidebar.success("Trading Strategy is Paused")
+    elif st.session_state['trading_status'] == Status.Stop:
+        st.sidebar.error("Trading Strategy has been Stopped")
+display_trading_status()
 
 # ********************************************* sidebar end *********************************************
 
@@ -126,7 +160,7 @@ from app import update_figure
 
 @st.experimental_fragment(run_every=10)
 def update_candle_plot():
-    st.plotly_chart(update_figure(tickerChoice=current_pair), use_container_width=True)
+    st.plotly_chart(update_figure(tickerChoice=st.session_state['current_pair']), use_container_width=True)
 update_candle_plot()
 
 
