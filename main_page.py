@@ -9,7 +9,7 @@ api_client = OandaAPI(access_token=access_token)
 
 st.set_page_config(layout="wide")
 
-current_pair = "EUR_USD"
+current_pair = "BTC_USD"
 # ********************************************* sidebar begin *********************************************
 st.sidebar.title("Operation Panel")
 
@@ -122,7 +122,10 @@ import plotly.graph_objects as go
 
 from app import update_figure
 
-st.plotly_chart(update_figure(tickerChoice=current_pair), use_container_width=True)
+@st.experimental_fragment(run_every=1)
+def update_candle_plot():
+    st.plotly_chart(update_figure(tickerChoice=current_pair), use_container_width=True)
+update_candle_plot()
 
 
 

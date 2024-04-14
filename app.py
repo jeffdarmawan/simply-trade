@@ -354,15 +354,9 @@ def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD'):
     #set choice to something if !isPostBack
 
     # CHANGE THIS TO INPUT
-    lookback_count = 100
-    if tickerChoice == None:
-        tickerChoice = 'EUR_USD'
- 
+    lookback_count = 120
  
     #make stockDF    
-    today = date.today()
-
-    # stockDF = yf.download(tickerChoice, start = '2020-01-01', end = today)
     stockDF = fetch_data(tickerChoice, lookback_count)
 
     #make go Figure object as fig
@@ -387,7 +381,7 @@ def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD'):
     fig = makeCurrentPrice(fig, stockDF)
  
     #make and plot stock's resistance/support values using fibonacci retracement
-    fig = makeFibLevels(fig, stockDF)
+    # fig = makeFibLevels(fig, stockDF)
  
      
     return fig     
