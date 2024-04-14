@@ -12,17 +12,10 @@ import plotly.graph_objs as go
  
 # Override Yahoo Finance 
 yf.pdr_override()
-
-#commit
-# !pip install ta
  
 from datetime import date
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from ta.trend import MACD
-from ta.momentum import RSIIndicator
-from dash import html, dcc, Dash
-from dash.dependencies import Input, Output, State
 
 # Internal Package
 from data_fetcher import fetch_data
@@ -47,25 +40,16 @@ def makeCandlestick(fig, stockDF):
 def makeMA(fig, stockDF):
     #create moving average values
     stockDF["MA5"] = stockDF["Close"].rolling(window = 5).mean()
-    stockDF["MA15"] = stockDF["Close"].rolling(window = 15).mean()
-    stockDF["MA50"] = stockDF["Close"].rolling(window = 50).mean()
-    stockDF["MA200"] = stockDF["Close"].rolling(window = 200).mean()
- 
+    stockDF["MA20"] = stockDF["Close"].rolling(window = 20).mean()
  
     #plots moving average values; the 50-day and 200-day averages
     #are visible by default, and the 5-day and 15-day are accessed via legend
-    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA5'], opacity = 0.4, visible="legendonly",
+    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA5'], opacity = 0.4, 
                         line = dict(color = 'blue', width = 2), name = 'MA 5'))
              
-    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA15'], opacity = 0.7, visible = "legendonly",
+    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA20'], opacity = 0.7, 
                         line = dict(color = 'orangered', width = 2), name = 'MA 15'))
- 
-    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA50'], opacity = 0.7,
-                        line = dict(color = 'purple', width = 2), name = 'MA 50'))
- 
-    fig.add_trace(go.Scatter(x = stockDF.index, y = stockDF['MA200'], opacity = 0.7,
-                        line = dict(color = 'black', width = 2), name = 'MA 200'))
- 
+
     return fig
  
 def makeVolume(fig, stockDF):
@@ -83,78 +67,7 @@ def makeVolume(fig, stockDF):
                          ), row = 2, col = 1) # row & col to indicate which figure to put in, default: row = 1, col = 1
  
     return fig
-def makeMACD(fig, stockDF):
-    #Create MACD values
-    macd = MACD(close = stockDF["Close"],
-                window_slow = 26,
-                window_fast = 12,
-                window_sign = 9)
- 
-             
-    #Sets color for MACD
-    colors = ['green' if val >= 0
-                      else 'red' for val in macd.macd_diff()]
- 
- 
-    #Plots MACD values
-    fig.add_trace(go.Bar(x = stockDF.index,
-                         y = macd.macd_diff(),
-                         marker_color = colors,
-                         showlegend = False,
-                         name = "Histogram"
-                         ), row = 4, col = 1)
- 
- 
-    fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = macd.macd(),
-                             line = dict(color = 'red', width = 1),
-                             showlegend = False,
-                             name = "MACD"
-                             ), row = 4, col = 1)
- 
- 
-    fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = macd.macd_signal(),
-                             line = dict(color = 'blue', width = 2),
-                             showlegend = False,
-                             name = "Signal"
-                             ), row = 4, col = 1)
- 
- 
-    return fig
 
-def makeRSI(fig, stockDF):
-    #Create RSI values
-    rsi = RSIIndicator(close = stockDF["Close"],
-                       window = 14)
- 
- 
-    #Plots RSI values
-    fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = rsi.rsi(),
-                             line = dict(color = 'black', width = 2),
-                             showlegend = False,
-                             name = "RSI"
-                             ), row = 3, col = 1)
- 
- 
-    fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = [30 for val in range(len(stockDF))],
-                             line = dict(color = 'red', width = 1),
-                             showlegend = False,
-                             name = "Oversold"
-                             ), row = 3, col = 1)
- 
- 
-    fig.add_trace(go.Scatter(x = stockDF.index,
-                             y = [70 for val in range(len(stockDF))],
-                             line = dict(color = 'green', width = 1),
-                             showlegend = False,
-                             name = "Overbought"
-                             ), row = 3, col = 1)
- 
- 
-    return fig
 def makeCurrentPrice(fig, stockDF):
     #Plots the last closing price of stock 
     fig.add_trace(go.Scatter(x = stockDF.index,
@@ -164,84 +77,6 @@ def makeCurrentPrice(fig, stockDF):
      
  
     return fig
- 
- 
-def supportLevel(stockDF, index):
-    #Finds and returns support levels using fractals;
-    #if there are two higher lows on each side of the current stockDF['Low'] value, 
-    #return this value
-    support = stockDF['Low'][index] < stockDF['Low'][index - 1] and \
-              stockDF['Low'][index] < stockDF['Low'][index + 1] and \
-              stockDF['Low'][index + 1] < stockDF['Low'][index + 2] and \
-              stockDF['Low'][index - 1] < stockDF['Low'][index - 2]
- 
-    return support
- 
- 
-def resistanceLevel(stockDF, index):
-    #Finds and returns resistance levels using fractals;
-    #If there are two lower highs on each side of the current stock['High'] value,
-    #return this value
-    resistance = stockDF['High'][index] > stockDF['High'][index - 1] and \
-              stockDF['High'][index] > stockDF['High'][index + 1] and \
-              stockDF['High'][index + 1] > stockDF['High'][index + 2] and \
-              stockDF['High'][index - 1] > stockDF['High'][index - 2]
- 
-    return resistance
-def isFarFromLevel(stockDF, level, levels):
-    #If a level is found near another level, it returns false;
- 
-    ##.88 for longer term .97 for short term
-    s = np.mean(stockDF['High'] - (stockDF['Low'] * .89))
- 
-    return np.sum([abs(level - x) < s for x in levels]) == 0
- 
- 
-def makeLevels(fig, stockDF):
-    #Traverses through stockDF and finds key support/resistance levels
-    levels = []
-    for index in range(2, stockDF.shape[0] - 2):
-        if supportLevel(stockDF, index):
-            support = stockDF['Low'][index]
-            if isFarFromLevel(stockDF, support, levels):
-                levels.append((support))
-             
-        elif resistanceLevel(stockDF, index):
-            resistance = stockDF['High'][index]
-            if isFarFromLevel(stockDF, resistance, levels):
-                levels.append((resistance))
- 
-    levels.sort()
-     
-    # TODO: currently not working
-    # are we using this though?
-    # Plots the key levels within levels 
-    # for i in range(len(levels)):
-    #     fig.add_trace(go.Scatter(x = stockDF.index,
-    #                          y = [levels[i] for val in range(len(stockDF))],
-    #                          line = dict(color = "black"),
-    #                          name = "Sup/Res: " + str(round(levels[i], 2)),
-    #                          hoverinfo = "skip",
-    #                          opacity = 0.3))
- 
-    return fig
-def findAbsMax(stockDF):
-    absMax = 0
-    for i in range(len(stockDF)):
-        if stockDF["Close"][i] > absMax:
-            absMax = stockDF["Close"][i]
-         
-    return absMax
- 
- 
-def findAbsLow(stockDF):
-    absLow = 50
-    for i in range(len(stockDF)):
-        if stockDF["Close"][i] < absLow:
-            absLow = stockDF["Close"][i]
- 
-    return absLow
-
  
 def graphLayout(fig, choice):
     #Sets the layout of the graph and legend
