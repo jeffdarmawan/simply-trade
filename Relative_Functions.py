@@ -6,8 +6,8 @@ import oandapyV20.endpoints.pricing as pricing
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.positions as positions
 
-access_token = "f176a52ece6296e57df035992ee409d3-d299d6aaafa65622d5418531ebe83a00"
-account_id = "101-003-28603640-001"
+access_token = "3f0f1b513d44797ff63c09d9da612561-6480f119d75e63cea1e420564d12b6f1"
+account_id = "101-003-28603773-001"
 
 class OandaAPI:
     def __init__(self, access_token):
