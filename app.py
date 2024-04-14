@@ -241,37 +241,7 @@ def findAbsLow(stockDF):
             absLow = stockDF["Close"][i]
  
     return absLow
- 
- 
-def makeFibLevels(fig, stockDF):
-    fibRatios = [.236, .382, .5, .618, .786, 1]
-    fibLevels = []
-    absMax = findAbsMax(stockDF)
-    absLow = findAbsLow(stockDF)
-    dif = absMax - absLow
- 
-    for i in range(len(fibRatios)):
-        fibLevels.append(dif * fibRatios[i])
-#for prices that are above the last resistance/support line within fibLevels,
-    #look to see if there can be any levels drawn using fractals that are also not 
-    #too close to the current last support/resistance;
-    #We really are just looking for the last resistance level;
-    fractal = fibLevels[-1] + (fibLevels[-1] * .17)
-    if (fibLevels[-1] < fractal) and (fractal < absMax):
-         fibLevels.append(fractal)  
-     
-    # TODO: currently not working
-    # are we using this though?
-    # for i in range(len(fibLevels)):
-    #     fig.add_trace(go.Scatter(x = stockDF.index,
-    #                          y = [fibLevels[i] for val in range(len(stockDF))],
-    #                          line = dict(color = "black"),
-    #                          name = "Sup/Res: " + str(round(fibLevels[i], 2)),
-    #                          hoverinfo = "skip",
-    #                          opacity = 0.3))
-     
-    return fig
- 
+
  
 def graphLayout(fig, choice):
     #Sets the layout of the graph and legend
@@ -313,52 +283,16 @@ def xAxes(fig):
      
     return fig
  
- 
- 
-fig = go.Figure()
 config = dict({'scrollZoom': True})
 
-
-
-stockApp = Dash(__name__, meta_tags=[{'name': 'viewport', 
-                       'content':'width=device-width, initial-scale=1.0'}])
- 
-application = stockApp.server
- 
-stockApp.layout = html.Div([
-            dcc.Graph(figure = fig, config = config,
-                    style = {'width': '99vw', 'height': '93vh'},
-                    id = "stockGraph"
-                    ),
- 
-            html.Div([
-                dcc.Input(
-                    id = "userInput",
-                    type = "text",
-                    placeholder = "Ticker Symbol"
-                            ),
-             
-                html.Button("Submit", id = "btnSubmit")
-                ]),
-
-            # refresh every 1 second
-            dcc.Interval(id="refresh", interval=1 * 1000, n_intervals=0),
-                      
-        ])
-
-@stockApp.callback(
-    Output("stockGraph", "figure"),
-    [Input("btnSubmit", "n_clicks"),
-     Input("refresh", "n_intervals")],
-    State("userInput", "value"))
-def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD'):
+def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD', granularity='S5'):
     #set choice to something if !isPostBack
 
     # CHANGE THIS TO INPUT
     lookback_count = 120
  
     #make stockDF    
-    stockDF = fetch_data(tickerChoice, lookback_count)
+    stockDF = fetch_data(tickerChoice, granularity=granularity, lookback_count=lookback_count)
 
     #make go Figure object as fig
     fig = go.Figure()
@@ -375,17 +309,8 @@ def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD'):
     #make and plot subplots charts and moving averages
     fig = makeMA(fig, stockDF)
     fig = makeVolume(fig, stockDF)
-    # fig = makeMACD(fig, stockDF)
-    # fig = makeRSI(fig, stockDF)
  
     #make and plot stock's last closing price
     fig = makeCurrentPrice(fig, stockDF)
- 
-    #make and plot stock's resistance/support values using fibonacci retracement
-    # fig = makeFibLevels(fig, stockDF)
- 
      
-    return fig     
-
-def create_app():
-    return application
+    return fig

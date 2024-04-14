@@ -168,7 +168,16 @@ from app import update_figure
 
 @st.experimental_fragment(run_every=10)
 def update_candle_plot():
-    st.plotly_chart(update_figure(tickerChoice=st.session_state['current_pair']), use_container_width=True)
+    granularity = 'S5'
+    if selected_model == Models.OneMin:
+        granularity = "M1"
+    elif selected_model == Models.FiveMin:
+        granularity = "M5"
+    elif selected_model == Models.FifteenMin:
+        granularity = "M15"
+    elif selected_model == Models.OneHour:
+        granularity = "H1"
+    st.plotly_chart(update_figure(tickerChoice=st.session_state['current_pair'], granularity=granularity), use_container_width=True)
 update_candle_plot()
 
 

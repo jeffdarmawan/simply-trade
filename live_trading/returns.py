@@ -119,10 +119,13 @@ def fetch_balance_changes(open_date, current_date):
 
     # gather daily changes
     df = pd.DataFrame(all_transactions)
+    
     if not df.empty:
         # pd.to_numeric(df['accountBalance'], errors='coerce')
         df['amount'] = pd.to_numeric(df['accountBalance'], errors='coerce')
+        df['pct_change'] = df['amount'].pct_change()
         df['time'] = pd.to_datetime(df['time'])
+        print(df.describe())
         df.set_index('time', inplace=True)
         df = df.resample('D').last()  # end of day balance
 
@@ -131,18 +134,22 @@ def fetch_balance_changes(open_date, current_date):
 def calculate_sharpe_ratio(df):
     # The risk-free daily rate assume 1% annual rate
     risk_free_rate = 0.01 / 365
-    df['excess_daily_return'] = df['amount'] - risk_free_rate # so amount should be the daily return
+    print(df.describe())
+    print(df.head())
     
-    # Mean of excess returns
-    mean_excess_return = df['excess_daily_return'].mean()
-    
-    # Standard deviation of returns
-    std_dev = df['excess_daily_return'].std()
+    # Calculate daily excess return
+    daily_excess_return = df['pct_change'] - risk_free_rate
+
+    # Calculate daily standard deviation
+    daily_std = np.std(daily_excess_return)
+
+    # Calculate daily Sharpe Ratio
+    daily_sharpe = daily_excess_return.mean() / daily_std
     
     # Sharpe ratio
-    sharpe_ratio = mean_excess_return / std_dev * np.sqrt(252)  # sqrt(252) annualizes the standard deviation
+    annual_sharpe = daily_sharpe * np.sqrt(252)  # sqrt(252) annualizes the standard deviation
     
-    return sharpe_ratio
+    return annual_sharpe
 
 def fetch_closed_trades():
     r = trades.TradesList(accountID=account_id, params={"state": "CLOSED"})

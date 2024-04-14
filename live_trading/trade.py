@@ -173,7 +173,6 @@ def trade_attempt(
             #print( "Annualised return is ", round(annualised_returns, 2) )
 
             #calculate draw_down
-            start_time = datetime(2020, 5, 17)
             transactions = fetch_transactions(start_time, datetime.now())
             df_equity = process_transactions(transactions, get_current_balance())
             df_drawdown = calculate_drawdowns(df_equity)
@@ -186,7 +185,7 @@ def trade_attempt(
 
             if not df_returns.empty:
                 sharpe_ratio = calculate_sharpe_ratio(df_returns)
-                #print( "Sharpe Ratio is ", round(sharpe_ratio, 2) )
+                print( "Sharpe Ratio is ", round(sharpe_ratio, 2) )
             else:
                 print("No data available to calculate Sharpe Ratio.")
 

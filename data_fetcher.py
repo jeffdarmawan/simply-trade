@@ -10,14 +10,14 @@ access_token = "fc55828bad637666f39996dd32b6d527-e32e012b7ea4947bd3a6a62a2de6c04
 # accountID = account_id
 access_token = access_token
 
-def fetch_data(instrument_name, lookback_count=100):
+def fetch_data(instrument_name, granularity='S5', lookback_count=100):
     # Initialize the Oanda API client
     api = API(access_token=access_token, environment="practice")
 
     # Define the parameters for the candlestick data request
     params = {
         'count': lookback_count,
-        'granularity': 'S5',
+        'granularity': granularity,
         'price': 'M',  # Midpoint candlestick prices
     }
 

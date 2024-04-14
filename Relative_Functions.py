@@ -55,9 +55,9 @@ class OandaAPI:
                 "instrument" : str(forex_pair)
             }
             r = trades.TradesList(accountID=account_id, params=params)
-            self.client.request(r)
+            data = self.client.request(r)
 
-            for item in r.response['trades']:
+            for item in data['trades']:
                 open_time.append(item['openTime'])
                 instrument.append(item['instrument'])
                 price.append(item['price'])
