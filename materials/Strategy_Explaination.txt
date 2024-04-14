@@ -1,0 +1,10 @@
+LGBM (LightGBM) is a popular machine learning algorithm that belongs to the gradient boosting family. It is specifically designed to be efficient and scalable, making it suitable for handling large datasets.
+
+The algorithm works by building an ensemble of weak prediction models, known as decision trees, in a sequential manner. Each decision tree is trained to correct the mistakes made by the previous trees, gradually improving the overall prediction accuracy.
+
+One of the key features of LGBM is its ability to handle both categorical and numerical features without requiring explicit data preprocessing. It uses a technique called "gradient-based one-side sampling" to efficiently handle categorical features during the training process.
+
+LGBM also incorporates a technique called "leaf-wise" tree growth, which allows it to grow trees in a more balanced and efficient manner. This helps to reduce the overall training time and improve the model's performance.
+
+Overall, LGBM is known for its speed, accuracy, and ability to handle large datasets. It has been widely used in various domains, including finance, healthcare, and online advertising, to solve both classification and regression problems.
+

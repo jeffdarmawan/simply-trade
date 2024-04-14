@@ -1,0 +1,122 @@
+Order Transaction
+succesful_order = {
+  "lastTransactionID": "6368",
+  "orderCreateTransaction": {
+    "accountID": "<ACCOUNT>",
+    "batchID": "6367",
+    "id": "6367",
+    "instrument": "EUR_USD",
+    "positionFill": "DEFAULT",
+    "reason": "CLIENT_ORDER",
+    "time": "2016-06-22T18:41:29.264030555Z",
+    "timeInForce": "FOK",
+    "type": "MARKET_ORDER",
+    "units": "100",
+    "userID": <USERID>
+  },
+  "orderFillTransaction": {
+    "accountBalance": "43650.75945",
+    "accountID": "<ACCOUNT>",
+    "batchID": "6367",
+    "financing": "0.00000",
+    "id": "6368",
+    "instrument": "EUR_USD",
+    "orderID": "6367",
+    "pl": "0.00000",
+    "price": "1.13027",
+    "reason": "MARKET_ORDER",
+    "time": "2016-06-22T18:41:29.264030555Z",
+    "tradeOpened": {
+      "tradeID": "6368",
+      "units": "100"
+    },
+    "type": "ORDER_FILL",
+    "units": "100",
+    "userID": "XXXX"
+  },
+  "relatedTransactionIDs": [
+    "6367",
+    "6368"
+  ]
+}
+
+cancel_order = {'orderCreateTransaction': {'id': '2037',
+  'accountID': '101-003-28603773-001',
+  'userID': 28603773,
+  'batchID': '2037',
+  'requestID': '115271160974402940',
+  'time': '2024-04-13T04:30:34.739899955Z',
+  'type': 'MARKET_ORDER',
+  'instrument': 'BTC_USD',
+  'units': '1.00',
+  'timeInForce': 'FOK',
+  'positionFill': 'DEFAULT',
+  'takeProfitOnFill': {'price': '68006.4', 'timeInForce': 'GTC'},
+  'stopLossOnFill': {'price': '66666.4',
+   'timeInForce': 'GTC',
+   'triggerMode': 'TOP_OF_BOOK'},
+  'reason': 'CLIENT_ORDER'},
+ 'orderCancelTransaction': {'id': '2038',
+  'accountID': '101-003-28603773-001',
+  'userID': 28603773,
+  'batchID': '2037',
+  'requestID': '115271160974402940',
+  'time': '2024-04-13T04:30:34.739899955Z',
+  'type': 'ORDER_CANCEL',
+  'orderID': '2037',
+  'reason': 'MARKET_HALTED'},
+ 'relatedTransactionIDs': ['2037', '2038'],
+ 'lastTransactionID': '2038'}
+
+
+ #Creating fake position for position
+position = {
+  "lastTransactionID": "6387", 
+  "positions": [
+    {
+      "instrument": "EUR_USD", 
+      "long": {
+        "averagePrice": "1.13032", 
+        "pl": "-54344.85056", 
+        "resettablePL": "-54344.85056", 
+        "tradeIDs": [
+          "6383", 
+          "6385"
+        ], 
+        "units": "350", 
+        "unrealizedPL": "-0.04700"
+      }, 
+      "pl": "-54300.44169", 
+      "resettablePL": "-54300.44169", 
+      "short": {
+        "pl": "44.40887", 
+        "resettablePL": "44.40887", 
+        "units": "0", 
+        "unrealizedPL": "0.00000"
+      }, 
+      "unrealizedPL": "-0.04700"
+    }, 
+    {
+      "instrument": "USD_CAD", 
+      "long": {
+        "pl": "-483.91941", 
+        "resettablePL": "-483.91941", 
+        "units": "0", 
+        "unrealizedPL": "0.00000"
+      }, 
+      "pl": "-486.16662", 
+      "resettablePL": "-486.16662", 
+      "short": {
+        "averagePrice": "1.28241", 
+        "pl": "-2.24721", 
+        "resettablePL": "-2.24721", 
+        "tradeIDs": [
+          "6387"
+        ], 
+        "units": "-600", 
+        "unrealizedPL": "-0.08525"
+      }, 
+      "unrealizedPL": "-0.08525"
+    }
+  ]
+}

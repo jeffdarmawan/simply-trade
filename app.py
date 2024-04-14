@@ -28,9 +28,9 @@ from data_fetcher import fetch_data
 
 def makeCandlestick(fig, stockDF):
     #sets parameters for subplots
-    fig = make_subplots(rows = 4, cols = 1, shared_xaxes = True,
+    fig = make_subplots(rows = 2, cols = 1, shared_xaxes = True,
                     vertical_spacing = 0.01,
-                    row_heights = [0.6, 0.1, 0.15, 0.15])
+                    row_heights = [0.8,0.2])#, 0.1, 0.15, 0.15
  
  
     #plots candlestick values using stockDF
@@ -276,13 +276,14 @@ def graphLayout(fig, choice):
     #Sets the layout of the graph and legend
     fig.update_layout(title_text = choice + ' Price Action', 
                   title_x = 0.5, 
-                  legend_title_text = "Legend Items",
+                #   legend_title_text = "Legend Items",
                   dragmode = "pan", 
                   xaxis_rangeslider_visible = False, 
                   hovermode = "x", 
                   legend = dict(bgcolor="#E2E2E2",
                            bordercolor="Black",
-                           borderwidth=2)
+                           borderwidth=2,
+                           font=dict(size=7))
                                 
                  )
  
@@ -349,7 +350,7 @@ stockApp.layout = html.Div([
     [Input("btnSubmit", "n_clicks"),
      Input("refresh", "n_intervals")],
     State("userInput", "value"))
-def update_figure(n, _n_intervals, tickerChoice):
+def update_figure(n=0, _n_intervals=0, tickerChoice='EUR_USD'):
     #set choice to something if !isPostBack
 
     # CHANGE THIS TO INPUT
@@ -379,8 +380,8 @@ def update_figure(n, _n_intervals, tickerChoice):
     #make and plot subplots charts and moving averages
     fig = makeMA(fig, stockDF)
     fig = makeVolume(fig, stockDF)
-    fig = makeMACD(fig, stockDF)
-    fig = makeRSI(fig, stockDF)
+    # fig = makeMACD(fig, stockDF)
+    # fig = makeRSI(fig, stockDF)
  
     #make and plot stock's last closing price
     fig = makeCurrentPrice(fig, stockDF)

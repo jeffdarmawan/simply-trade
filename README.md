@@ -1,6 +1,6 @@
 # simply-trade
 
-To run the app:
+To run both live dashboard and trading app:
 ```
-make run
+make deploy
 ```

@@ -5,9 +5,9 @@ from oandapyV20 import API
 from oandapyV20.endpoints.instruments import InstrumentsCandles
 
 access_token = "fc55828bad637666f39996dd32b6d527-e32e012b7ea4947bd3a6a62a2de6c049"
-account_id = "101-003-28582948-001"
+# account_id = "101-003-28582948-001"
 
-accountID = account_id
+# accountID = account_id
 access_token = access_token
 
 def fetch_data(instrument_name, lookback_count=100):
