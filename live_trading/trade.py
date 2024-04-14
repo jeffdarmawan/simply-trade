@@ -70,7 +70,12 @@ def trade_attempt(
         trade_cycle: int = default_trade_cycle,
         order_type: str = default_order_type,
         lookback_count: int = default_lookback_count):
-    print("Trading attempt...")
+    print("--- Trading attempt: START ---")
+    print("Configurable variables: ")
+    print("Model=", model)
+    print("Take Profit=", take_profit)
+    print("Stop Loss=", stop_loss)
+
     if status == Status.Active:       
         try:
             print("Running strategy...")
@@ -79,7 +84,6 @@ def trade_attempt(
             open_datetime = datetime.now().date()
 
             positions_dict = get_open_positions()
-            print(instrument)
 
             for instrument in usd_pairs:
 
@@ -221,3 +225,4 @@ def trade_attempt(
         close_all_trades(client, accountID)
         print("Current balance: {:.2f}".format(get_current_balance()))
     
+    print("--- Trading attempt: END ---")
