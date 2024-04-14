@@ -116,24 +116,9 @@ def calculate_win_rate_from_trades(trades):
     win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
     return win_rate
 
-def pnl_all_positions(client, account_id):
+def pnl_all_positions():
     request = positions.OpenPositions(accountID=account_id)
     response = client.request(request)
     open_positions = response.get("positions", [])
     pnl = sum([float(pos['unrealizedPL']) for pos in open_positions])
     return pnl
-
-def log_pnl_over_time(start_time, end_time, interval_seconds=60, duration_minutes=10):
-
-    time_series = []
-    pnl_series = []
-    
-    while current_time <= end_time:
-        pnl = pnl_all_positions(client, account_id)
-        time_series.append(current_time)
-        pnl_series.append(pnl)
-        print(f"Logged PnL {pnl} at {current_time}")
-        time.sleep(interval_seconds)  # Wait for the specified interval
-        current_time = datetime.now()
-    
-    return pd.DataFrame({'Time': time_series, 'PnL': pnl_series})
