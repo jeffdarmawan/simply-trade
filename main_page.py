@@ -206,10 +206,10 @@ def account_summary():
                     "positionValue": round(float(summary_info_api['positionValue']),2),
                     "pl":   round(float(summary_info_api['pl']),2),
                     "unrealizedPL": round(float(summary_info_api['unrealizedPL']),2),
-                    "annualized_return": 12.59,
-                    "max_drawdown": 3.78,
-                    "sharpe_ratio": 1.14,
-                    "win_rate": 64 
+                    "annualized_return": float(summary_info_api['annualized_return']),
+                    "max_drawdown": float(summary_info_api['max_drawdown']),
+                    "sharpe_ratio": float(summary_info_api['sharpe_ratio']),
+                    "win_rate": float(summary_info_api['win_rate']) 
                 }
     
     metrics_data_delta = api_delta.get_summary_info_delta(metrics_data)
