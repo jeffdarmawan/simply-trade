@@ -122,7 +122,7 @@ def check_instrument_positions(open_positions,instrument):
         position_type = "None"
     return position_type
 
-def close_position(account_id, instrument, long_units=None, short_units=None):
+def close_position(instrument, long_units=None, short_units=None):
     """
     Close positions for a specific instrument with flexible unit specifications.
 
@@ -217,3 +217,4 @@ def close_all_trades(client, account_id):
                 print(f"Failed to close trade {trade_id}. Error: {e}")
     else:
         print("No open trades to close.")
+

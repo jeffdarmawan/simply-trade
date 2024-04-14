@@ -12,9 +12,10 @@ account_id = "101-003-28603640-001"
 class OandaAPI:
     def __init__(self, access_token):
         self.client = oandapyV20.API(access_token=access_token, environment="practice")
+        self.prices = {}
+        self.summary_info = {}
 
     def get_prices(self):
-        prices = {}
         forex_pairs = ["EUR_USD", "USD_JPY", "GBP_USD", "AUD_USD"]
         params = {
             "instruments" : "EUR_USD,USD_JPY,GBP_USD,AUD_USD"
@@ -22,21 +23,22 @@ class OandaAPI:
         r = pricing.PricingInfo(accountID=account_id, params=params)
         self.client.request(r)
         for i in r.response['prices']:
-            prices[i['instrument']] = i['bids'][0]['price']
-        return prices
+            self.prices[i['instrument']] = i['bids'][0]['price']
+        return self.prices
+    
     
     def get_account_summary(self):
-        summary_info = {}
         r = accounts.AccountSummary(accountID=account_id)
         self.client.request(r)
         response = r.response
-        summary_info = {'balance': response['account']['balance'],
-                        'currency': response['account']['currency'],
-                        'positionValue': response['account']['positionValue'],
-                        'pl': response['account']['pl'],
-                        'unrealizedPL': response['account']['unrealizedPL'],
-                        }
-        return summary_info
+        self.summary_info = {   'balance': response['account']['balance'],
+                                'currency': response['account']['currency'],
+                                'positionValue': response['account']['positionValue'],
+                                'pl': response['account']['pl'],
+                                'unrealizedPL': response['account']['unrealizedPL'],
+                            }
+        return self.summary_info
+    
 
     def get_order_history(self):
         open_time = []
@@ -77,6 +79,36 @@ class OandaAPI:
         return order_history
 
     
+class Delta_Data:
+    def __init__(self):
+        self.price_last_period = { 'EUR_USD': 0,
+                                   'USD_JPY': 0,
+                                   'GBP_USD': 0,
+                                   'AUD_USD': 0
+                                 }
+        self.summary_info_last_period = { 'balance': 0,
+                                          'positionValue': 0,
+                                          'pl': 0,
+                                          'unrealizedPL': 0,
+                                          'annualized_return': 0,
+                                          'max_drawdown': 0,
+                                          'sharpe_ratio': 0,
+                                          'win_rate': 0
+                                        }
         
+    def get_price_delta(self, current_prices):
+        delta = {}
+        for key in current_prices.keys():
+            delta[key] = float(current_prices[key]) - float(self.price_last_period[key])
+            self.price_last_period[key] = current_prices[key]
+        return delta
+        
+    
+    def get_summary_info_delta(self, current_summary_info):
+        delta = {}
+        for key in current_summary_info.keys():
+            delta[key] = float(current_summary_info[key]) - float(self.summary_info_last_period[key])
+            self.summary_info_last_period[key] = current_summary_info[key]
+        return delta
     
     

@@ -2,13 +2,14 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
-from Relative_Functions import OandaAPI
+from Relative_Functions import OandaAPI, Delta_Data
 
 from live_trading.status import Status, Models
 import requests
 
 access_token = "f176a52ece6296e57df035992ee409d3-d299d6aaafa65622d5418531ebe83a00"
 api_client = OandaAPI(access_token=access_token)
+api_delta = Delta_Data()
 
 st.set_page_config(layout="wide")
 
@@ -46,13 +47,9 @@ if st.sidebar.button("AUD/USD 🇦🇺🇺🇸", on_click=None, type="secondary"
 
 st.sidebar.markdown("---")
 
-@st.experimental_fragment(run_every=10)
-def account_summary():
-    summary_info = api_client.get_account_summary()
-    return summary_info
-summary_info = account_summary()
-# st.sidebar.dataframe(data=summary_info,use_container_width=True)
-# TODO: move where?
+summary_info_sidebar = api_client.get_account_summary()
+st.sidebar.dataframe(data=summary_info_sidebar,use_container_width=True)
+
 
 # ************************************** Trading Strategy Buttons ****************************************
 
@@ -131,14 +128,7 @@ display_trading_status()
 # ********************************************* sidebar end *********************************************
 
 
-metrics_data = {"Total Capital": round(float(summary_info['balance']),2),
-                "Position Level": round(float(summary_info['positionValue']),2),
-                "Realized P&L":   round(float(summary_info['pl']),2),
-                "Unrealized P&L": round(float(summary_info['unrealizedPL']),2),
-                "Annualized Return": 500,
-                "Maximum Drawdown": 600,
-                "Sharpe Ratio": 700,
-                "Win Rate(%)": 800 }
+
 
 # ********************************************* main page begin *****************************************
 
@@ -147,15 +137,16 @@ metrics_data = {"Total Capital": round(float(summary_info['balance']),2),
 @st.experimental_fragment(run_every=5)
 def show_price():
     prices = api_client.get_prices()
+    price_delta = api_delta.get_price_delta(prices)
     tp1, tp2, tp3, tp4 = st.columns(4)
     with tp1:
-        st.metric(label="EUR/USD", value=round(float(prices['EUR_USD']),4), delta=0.001)
+        st.metric(label="EUR/USD", value=round(float(prices['EUR_USD']),4), delta=price_delta['EUR_USD'])
     with tp2:
-        st.metric(label="USD/JPY", value=round(float(prices['USD_JPY']),4), delta=-0.001)
+        st.metric(label="USD/JPY", value=round(float(prices['USD_JPY']),4), delta=price_delta['USD_JPY'])
     with tp3:
-        st.metric(label="GBP/USD", value=round(float(prices['GBP_USD']),4), delta=0.001)
+        st.metric(label="GBP/USD", value=round(float(prices['GBP_USD']),4), delta=price_delta['GBP_USD'])
     with tp4:
-        st.metric(label="AUD/USD", value=round(float(prices['AUD_USD']),4), delta=-0.001)
+        st.metric(label="AUD/USD", value=round(float(prices['AUD_USD']),4), delta=price_delta['AUD_USD'])
 
 show_price()
 
@@ -166,11 +157,10 @@ import plotly.graph_objects as go
 
 from app import update_figure
 
-@st.experimental_fragment(run_every=1)
+@st.experimental_fragment(run_every=10)
 def update_candle_plot():
     st.plotly_chart(update_figure(tickerChoice=st.session_state['current_pair']), use_container_width=True)
 update_candle_plot()
-
 
 
 # 2. Strategy Explanation
@@ -182,30 +172,55 @@ def read_strategy_explaination():
 with st.expander("Strategy Description"):
     strategy_explaination = read_strategy_explaination()
     st.write(strategy_explaination)
-    st.image("https://static.streamlit.io/examples/dice.jpg")
+    # st.image("https://static.streamlit.io/examples/dice.jpg")
 
 
 # 3. Performance Metrics
 st.header("Performance Metrics")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric(label="Total Capital", value=metrics_data["Total Capital"], delta=1)
-with col2:
-    st.metric(label="Position Level", value=metrics_data["Position Level"], delta=-1)
-with col3:
-    st.metric(label="Realized P&L", value=metrics_data["Realized P&L"], delta=1)
-with col4:
-    st.metric(label="Unrealized P&L", value=metrics_data["Unrealized P&L"], delta=-1)
 
-col5, col6, col7, col8 = st.columns(4)
-with col5:
-    st.metric(label="Annualized Return", value=metrics_data["Annualized Return"], delta=1)
-with col6:
-    st.metric(label="Maximum Drawdown", value=metrics_data["Maximum Drawdown"], delta=-1)
-with col7:
-    st.metric(label="Sharpe Ratio", value=metrics_data["Sharpe Ratio"], delta=1)
-with col8:
-    st.metric(label="Win Rate(%)", value=metrics_data["Win Rate(%)"], delta=-1)
+@st.experimental_fragment(run_every=30)
+def account_summary():
+
+    summary_info_api = api_client.get_account_summary()
+
+    #TODO update the hard-coded data source
+    metrics_data = {"balance": round(float(summary_info_api['balance']),2),
+                    "positionValue": round(float(summary_info_api['positionValue']),2),
+                    "pl":   round(float(summary_info_api['pl']),2),
+                    "unrealizedPL": round(float(summary_info_api['unrealizedPL']),2),
+                    "annualized_return": 12.59,
+                    "max_drawdown": 3.78,
+                    "sharpe_ratio": 1.14,
+                    "win_rate": 64 
+                }
+    
+    metrics_data_delta = api_delta.get_summary_info_delta(metrics_data)
+    
+
+    # data get from API
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(label="Total Capital", value=metrics_data["balance"], delta=metrics_data_delta["balance"])
+    with col2:
+        st.metric(label="Position Value", value=metrics_data["positionValue"], delta=metrics_data_delta["positionValue"])
+    with col3:
+        st.metric(label="Realized P&L", value=metrics_data["pl"], delta=metrics_data_delta["pl"])
+    with col4:
+        st.metric(label="Unrealized P&L", value=metrics_data["unrealizedPL"], delta=metrics_data_delta["unrealizedPL"])
+
+    # data get from calculation
+    col5, col6, col7, col8 = st.columns(4)
+    with col5:
+        st.metric(label="Annualized Return", value=metrics_data["annualized_return"], delta=metrics_data_delta["annualized_return"], delta_color="inverse")
+    with col6:
+        st.metric(label="Maximum Drawdown", value=metrics_data["max_drawdown"], delta=metrics_data_delta["max_drawdown"], delta_color="inverse")
+    with col7:
+        st.metric(label="Sharpe Ratio", value=metrics_data["sharpe_ratio"], delta=metrics_data_delta["sharpe_ratio"], delta_color="inverse")
+    with col8:
+        st.metric(label="Win Rate(%)", value=metrics_data["win_rate"], delta=metrics_data_delta["win_rate"], delta_color="inverse")
+
+account_summary()
+
 
 # 4. P&L Curve vs Benchmark
 st.header("Profit and Loss")
@@ -223,7 +238,7 @@ st.line_chart(pnl_data, x="timestamps", y=["P&L", "Benchmark"])
 # 5. Order History
 st.header("Historical Orders")
 # re-check the order history every 15 seconds
-@st.experimental_fragment(run_every=15)
+@st.experimental_fragment(run_every=30)
 def get_order_history_():
     order_history = api_client.get_order_history()
     # return order_history
