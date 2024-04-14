@@ -59,7 +59,8 @@ st.sidebar.markdown("---")
 def send_request(
         status: Status,
         model: Models = Models.Unknown,
-        rr_ratio: float = 0.0):
+        take_profit: float = 0.003,
+        stop_loss: float = 0.001,):
     path = "deactivate"
     if status == Status.Active:
         path = "activate"
@@ -70,7 +71,10 @@ def send_request(
     
     try:
         # Send the POST request with error handling
-        response = requests.post(url, json={"model": model.value, "rr_ratio": rr_ratio})
+        response = requests.post(url, json={
+            "model": model.value, 
+            "take_profit": take_profit, 
+            "stop_loss": stop_loss})
         response.raise_for_status()  # Raise an exception for non-200 status codes
 
         print("success")
@@ -102,11 +106,13 @@ selected_model = st.sidebar.selectbox(
     disabled=disable_button("start_button"),
 )
 
-rr_ratio = st.sidebar.number_input("Risk/Reward ratio", value=2, placeholder="Insert a number", disabled=disable_button("start_button"))
+# rr_ratio = st.sidebar.number_input("Risk/Reward ratio", value=2, placeholder="Insert a number", disabled=disable_button("start_button"))
+take_profit = st.sidebar.number_input("Take Profit", value=0.002, step=1e-3, format="%.3f", placeholder="Insert a number", disabled=disable_button("start_button"))
+stop_loss = st.sidebar.number_input("Stop Loss", value=0.001, step=1e-3, format="%.3f", placeholder="Insert a number", disabled=disable_button("start_button"))
 
 def trading_buttons_callback(status: Status):
-    global selected_model, rr_ratio
-    send_request(status, selected_model, rr_ratio)
+    global selected_model, take_profit, stop_loss
+    send_request(status, selected_model, take_profit, stop_loss)
 
 st.sidebar.button("Start", key="start_button", help="Click to start", use_container_width=True, disabled=disable_button("start_button"),
                   on_click=trading_buttons_callback, args=(Status.Active,))

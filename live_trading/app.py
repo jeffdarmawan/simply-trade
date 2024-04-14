@@ -21,14 +21,14 @@ class LiveTrading:
         a = 0
         while True:
             print("current status: ", self.get_status())
-            # if self.get_status() == Status.Active:
-            # print(f"Thread ID: {threading.get_ident()}")
-            # print(a)
-            # a += 1
             if self.get_status() == Status.Active:
+                params = self.get_params()
+
                 trade_attempt(
-                    # take_profit=self.params['tp'],
-                    # stop_loss=self.params['sl'],
+                    # check if key params exist first
+                    model=params['model'],
+                    take_profit=params['take_profit'],
+                    stop_loss=params['stop_loss'],
                     status=self.status)
                 
             
@@ -42,9 +42,13 @@ class LiveTrading:
         with self.status_lock:
             self.status = new_status
 
-    def set_params(self, params):
-        print("set params: ", params)
+    def get_params(self):
         with self.params_lock:
+            return self.params
+
+    def set_params(self, params):
+        with self.params_lock:
+            print("set params: ", params)
             self.params = params
 
 # app function for waitress
@@ -57,30 +61,29 @@ def create_app():
     @app.route('/activate', methods=['POST'])
     def activate():
         # custom tp/sl
-        tp = request.json.get('tp')
-        sl = request.json.get('sl')
+        tp = request.json.get('take_profit')
+        sl = request.json.get('stop_loss')
         model = request.json.get('model')
-        rr_ratio = request.json.get('rr_ratio')
 
         if ltrading.get_status() == Status.Active:
             return Response("{'error':'Cannot activate when still active'}", status=201, mimetype='application/json')
 
-        ltrading.set_params({'tp': tp, 'sl': sl, 'model': model, 'rr_ratio': rr_ratio})
+        ltrading.set_params({'take_profit': tp, 'stop_loss': sl, 'model': model})
         ltrading.set_status(Status.Active)
 
         print("activated")
-        return "Print and addition activated\n"
+        return "Live trading activated\n"
 
     @app.route('/deactivate', methods=['POST'])
     def deactivate():
         ltrading.set_status(Status.Inactive)
         print("deactivated")
-        return "Print and addition deactivated\n"
+        return "Live trading deactivated\n"
     
     @app.route('/stop', methods=['POST'])
     def stop():
         ltrading.set_status(Status.Stop)
         print("stopped")
-        return "Print and addition stopped\n"
+        return "Live trading stopped\n"
 
     return app

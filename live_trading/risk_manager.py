@@ -183,7 +183,7 @@ def place_market_order(instrument,order_type, units, take_profit_price, stop_los
     try:
         request = orders.OrderCreate(accountID, data=data)
         response = client.request(request)
-        print(response)
+        # print(response)
         print("Oanda Orders placed successfully!")
         subject = "Oanda Trades Initiated"
         body = "Oanda Trades Initiated"
