@@ -131,7 +131,6 @@ def fetch_candlestick_data(instrument_name, granularity, lookback_count):
     # Request the candlestick data from Oanda API
     candles_request = InstrumentsCandles(instrument=instrument_name, params=params)
     response = api.request(candles_request)
-
     price_data = []
     for entry in response['candles']:
         price_entry = {

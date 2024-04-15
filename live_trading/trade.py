@@ -1,6 +1,6 @@
 from returns import calculate_annualised_returns, fetch_transactions, process_transactions, calculate_drawdowns, fetch_balance_changes,calculate_sharpe_ratio, fetch_closed_trades, calculate_win_rate_from_trades, pnl_all_positions
 from signal_generator import get_current_price, data_preparation
-from risk_manager import get_current_price, get_current_balance, get_quantity,get_pnl_price,get_open_positions, check_instrument_positions,place_market_order, close_position, calculate_total_unrealised_pnl, close_all_trades
+from risk_manager import get_current_price, get_current_balance, get_quantity,get_pnl_price,get_open_positions, check_instrument_positions,place_market_order, close_position, calculate_total_unrealised_pnl, close_all_trades,open_position_instrument
 from datetime import datetime
 import time
 import oandapyV20
@@ -40,8 +40,8 @@ model_15mins_features = ['DPO_20', 'THERMO_20_2_0.5', 'CFO_9', 'TRUERANGE_1', 'P
 # ===== Variables =====
 # Variable to be changed 
 # Risk reward (1:3) % based on prices
-default_take_profit = 0.015
-default_stop_loss = 0.005
+default_take_profit = 0.0009
+default_stop_loss = 0.0003
 
 target_pnl = 105000 
 stoploss_pnl = 95000
@@ -51,7 +51,7 @@ default_usd_pairs = ["EUR_USD","USD_JPY", "GBP_USD","AUD_USD"]
 
 # trade_cycle
 default_trade_cycle = 1
-target_pnl = 10500
+
 # order type
 default_order_type = "MARKET"
 
@@ -60,10 +60,9 @@ default_order_type = "MARKET"
 default_lookback_count = 20
 
 # ====== Trading Strategy ======
-
 def trade_attempt(
         status: Status = Status.Inactive,
-        model: Models = Models.FiveMin,
+        model: Models = Models.FifteenMin,
         usd_pairs: list = default_usd_pairs,
         take_profit: float = default_take_profit,
         stop_loss: float = default_stop_loss,
@@ -75,7 +74,6 @@ def trade_attempt(
     print("Model=", model)
     print("Take Profit=", take_profit)
     print("Stop Loss=", stop_loss)
-
     if status == Status.Active:       
         try:
             print("Running strategy...")
@@ -84,9 +82,8 @@ def trade_attempt(
             open_datetime = datetime.now().date()
 
             positions_dict = get_open_positions()
-
             for instrument in usd_pairs:
-                
+                print(instrument)
                  # === Model Selection
                 price = get_current_price(instrument)
                 if model == Models.OneMin:
@@ -158,36 +155,25 @@ def trade_attempt(
                         print ("Hold the trade")
                 else:
                     pass  
+                positions_dict = get_open_positions()
+                print("====================================================================================")
+                open_position_instrument(positions_dict,instrument)
+                print("====================================================================================")
             
             #Calculate the pnl
             
             positions_dict = get_open_positions()
-            long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)    
 
-            print(f" Target:  {target_pnl:.2f} | StopLoss: {stoploss_pnl :.2f} | PNL:  {total_pnl:.2f} ") 
+            long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)    
+            print("====================================================================================")
+            print(f" Target:  {target_pnl:.2f} | StopLoss: {stoploss_pnl :.2f} | PNL:  {total_pnl:.2f} ")
+            print("====================================================================================") 
             #calculate returns 
             cycle_datetime = datetime.now().date()
             trade_days = (open_datetime - cycle_datetime).days
 
             annualised_returns = calculate_annualised_returns(opening_balance, trade_days)
             #print( "Annualised return is ", round(annualised_returns, 2) )
-
-            #calculate draw_down
-            transactions = fetch_transactions(start_time, datetime.now())
-            df_equity = process_transactions(transactions, get_current_balance())
-            df_drawdown = calculate_drawdowns(df_equity)
-            max_drawdown = df_drawdown['drawdown_pct'].max()
-            #print(f"Maximum Drawdown: {max_drawdown}%")
-
-            #Calculate sharpe ratio
-            #Fetch account changes
-            df_returns = fetch_balance_changes(start_time, datetime.now())
-
-            if not df_returns.empty:
-                sharpe_ratio = calculate_sharpe_ratio(df_returns)
-                print( "Sharpe Ratio is ", round(sharpe_ratio, 2) )
-            else:
-                print("No data available to calculate Sharpe Ratio.")
 
             #Calculate Win-rate
             closed_trades = fetch_closed_trades()

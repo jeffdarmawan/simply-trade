@@ -70,7 +70,7 @@ def get_quantity(instrument, trade_direction):
         print("Unsupported currency in the denominator")
         position_size = None
     
-    if trade_direction == "BUY":
+    if trade_direction == 1:
         position_size = position_size 
     else:
         position_size = -position_size
@@ -105,15 +105,18 @@ def get_open_positions():
 #Check for any open position for individual instrument 
 
 def check_instrument_positions(open_positions,instrument):
-    if open_positions:  
-        positions_summary = open_positions['positions']
-        for pos in positions_summary:
-            if pos['instrument'] == instrument:
-                print(pos['long']['units'])
-                if float(pos['long']['units']) == 0 : 
-                    position_type = "Short"
-                elif float(pos['short']['units']) == 0 :
+    if open_positions:
+
+        for pos in open_positions:
+
+            if instrument == pos['instrument']:
+                if float(pos['long']['units']) > 0 : 
+
                     position_type = "Long"
+                    return position_type
+                elif float(pos['short']['units']) < 0 :
+                    position_type = "Short"
+                    return position_type
                 else:
                     position_type = "None"
             else:
@@ -183,12 +186,24 @@ def place_market_order(instrument,order_type, units, take_profit_price, stop_los
     try:
         request = orders.OrderCreate(accountID, data=data)
         response = client.request(request)
-        # print(response)
-        print("Oanda Orders placed successfully!")
-        subject = "Oanda Trades Initiated"
-        body = "Oanda Trades Initiated"
+
+        if 'orderFillTransaction' in response:
+            # Extract data
+            instrument = response['orderCreateTransaction']['instrument']
+            units_traded = response['orderFillTransaction']['tradeOpened']['units']
+            opening_price = response['orderFillTransaction']['tradeOpened']['price']
+            take_profit_price = response['orderCreateTransaction']['takeProfitOnFill']['price']
+            stop_loss_price = response['orderCreateTransaction']['stopLossOnFill']['price']
+            # Print the extracted information
+            print("Oanda Orders placed successfully!")
+            print(f"Instrument: {instrument}, Units Traded: {units_traded}, Opening Trade Price: {opening_price}, "f"Take Profit Price: {take_profit_price}, Stop Loss Price: {stop_loss_price}")
+            #body = "Oanda Trades Initiated"
+            #send_email_notification(subject, body)
+        else:
+            print("No Order Fill transaction found.")
+                
         return response
-        #send_email_notification(subject, body)
+
     except V20Error as e:
         print("Error placing Oanda orders:")
         print(e)
@@ -218,3 +233,38 @@ def close_all_trades(client, account_id):
     else:
         print("No open trades to close.")
 
+def open_position_instrument(positions_dict, instrument):
+    # Flag to check if the instrument is found
+    found = False
+
+    # Loop through each position in the positions dictionary
+    for position in positions_dict:
+        if position['instrument'] == instrument:
+            found = True
+            long_units = position['long']['units']
+            short_units = position['short']['units']
+            margin_used = position['marginUsed']
+            realized_pl = position['pl']
+
+            print(f"Instrument: {instrument}, Margin Used: {margin_used}, Combined Realized P&L: {realized_pl}")
+
+            # Print long position details if there are any long units
+            if int(long_units) > 0:
+                long_average_price = position['long']['averagePrice']
+                long_unrealized_pl = position['long']['unrealizedPL']
+                print(f"  Long - Units: {long_units}, Average Price: {long_average_price}, "
+                      f"Unrealized P&L: {long_unrealized_pl}")
+            
+            # Print short position details if there are any short units
+            if int(short_units) > 0:
+                short_average_price = position['short']['averagePrice']
+                short_unrealized_pl = position['short']['unrealizedPL']
+                print(f"  Short - Units: {short_units}, Average Price: {short_average_price}, "
+                      f"Unrealized P&L: {short_unrealized_pl}")
+
+            if int(long_units) == 0 and int(short_units) == 0:
+                print("  No active long or short positions.")
+            break
+    
+    if not found:
+        print("No open trade found for this instrument.")
