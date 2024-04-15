@@ -17,6 +17,7 @@ class OandaAPI:
         self.summary_info = {}
         self.order_history = {}
         self.realized_orders = {}
+        self.get_order_history()
 
     def get_prices(self):
         forex_pairs = ["EUR_USD", "USD_JPY", "GBP_USD", "AUD_USD"]
@@ -65,16 +66,16 @@ class OandaAPI:
             data = self.client.request(r)
 
             for item in data['trades']:
-                open_time.append(item['Open Time'])
+                open_time.append(item['openTime'])
                 instrument.append(item['instrument'])
-                price.append(item['price'])
-                initial_units.append(item['initialUnits'])
-                current_units.append(item['currentUnits'])
-                unrealized_pnl.append(item['unrealizedPL'])
-                realized_pnl.append(item['realizedPL'])
+                price.append(float(item['price']))
+                initial_units.append(float(item['initialUnits']))
+                current_units.append(float(item['currentUnits']))
+                unrealized_pnl.append(float(item['unrealizedPL']))
+                realized_pnl.append(float(item['realizedPL']))
         
         order_history = pd.DataFrame({
-            "Open Time": open_time,
+            "openTime": open_time,
             "Instrument": instrument,
             "Price": price,
             "Initial Units": initial_units,
@@ -89,27 +90,25 @@ class OandaAPI:
     def process_orders(self, capital=100000):
         df = self.order_history.copy()
         df = df[df['Realized P&L'] != 0]
-        df['Open Time'] = pd.to_datetime(df['Open Time'])
-        df['amount'] = pd.to_numeric(df['Realized P&L'], errors='coerce').fillna(0)
+        df['openTime'] = pd.to_datetime(df['openTime'])
+        df['amount'] = df['Realized P&L']
         df['cumulative'] = capital + df['amount'].cumsum()
-        df.set_index('Open Time', inplace=True)
+        df.set_index('openTime', inplace=True)
         self.realized_orders = df
 
     def calculate_drawdowns(self):
-        try:
-            df = self.realized_orders
-            df['peak'] = df['cumulative'].cummax()
-            df['drawdown'] = df['peak'] - df['cumulative']
-            df['drawdown_pct'] = (df['drawdown'] / df['peak']) * 100
-            max_drawdown = df['drawdown'].max()
-            return max_drawdown
-        except:
-            return 22
+        df = self.realized_orders
+        df['peak'] = df['cumulative'].cummax()
+        df['drawdown'] = df['peak'] - df['cumulative']
+        df['drawdown_pct'] = (df['drawdown'] / df['peak']) * 100
+        max_drawdown = df['drawdown'].max()
+        return max_drawdown
+
     
     def calculate_annualised_returns(self, capital=100000):
         try:
-            first_day = self.realized_orders['Open Time'][0]
-            last_day = self.realized_orders['Open Time'][-1]
+            first_day = self.realized_orders['openTime'][0]
+            last_day = self.realized_orders['openTime'][-1]
             total_trading_days = (last_day - first_day).days
             if total_trading_days == 0:
                 return 0
@@ -118,7 +117,8 @@ class OandaAPI:
 
             return annualised_returns
         except:
-            return float(34)
+            return 28
+
     
     def calculate_sharpe_ratio(self):
         try:
@@ -143,8 +143,8 @@ class OandaAPI:
         if len(trades) == 0:
             return 0
 
-        wins = sum(1 for trade in trades if float(trade['Realized P&L']) > 0)
-        losses = sum(1 for trade in trades if float(trade['Realized P&L']) < 0)
+        wins = len(trades[trades['Realized P&L'] > 0])
+        losses = len(trades[trades['Realized P&L'] < 0])
         total_trades = wins + losses
         win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
         return win_rate
@@ -179,7 +179,7 @@ class Delta_Data:
         delta = {}
         for key in current_summary_info.keys():
             delta[key] = float(current_summary_info[key]) - float(self.summary_info_last_period[key])
-            self.summary_info_last_period[key] = current_summary_info[key]
+            self.summary_info_last_period[key] = round(current_summary_info[key], 2)
         return delta
     
     

@@ -149,13 +149,13 @@ def show_price():
     price_delta = api_delta.get_price_delta(prices)
     tp1, tp2, tp3, tp4 = st.columns(4)
     with tp1:
-        st.metric(label="EUR/USD", value=round(float(prices['EUR_USD']),4), delta=price_delta['EUR_USD'])
+        st.metric(label="EUR/USD", value=round(float(prices['EUR_USD']),4), delta=round(float(price_delta['EUR_USD'])*10000, 2))
     with tp2:
-        st.metric(label="USD/JPY", value=round(float(prices['USD_JPY']),4), delta=price_delta['USD_JPY'])
+        st.metric(label="USD/JPY", value=round(float(prices['USD_JPY']),4), delta=round(float(price_delta['USD_JPY'])*1000, 2))
     with tp3:
-        st.metric(label="GBP/USD", value=round(float(prices['GBP_USD']),4), delta=price_delta['GBP_USD'])
+        st.metric(label="GBP/USD", value=round(float(prices['GBP_USD']),4), delta=round(float(price_delta['GBP_USD'])*10000, 2))
     with tp4:
-        st.metric(label="AUD/USD", value=round(float(prices['AUD_USD']),4), delta=price_delta['AUD_USD'])
+        st.metric(label="AUD/USD", value=round(float(prices['AUD_USD']),4), delta=round(float(price_delta['AUD_USD'])*10000, 2))
 
 show_price()
 
@@ -241,7 +241,7 @@ account_summary()
 
 
 # 4. P&L Curve vs Benchmark
-st.header("Profit and Loss")
+st.header("Strategy Performance")
 
 # the input P&L data shall be a dataframe like this:
 # | timestamps | P&L | Benchmark |
@@ -259,14 +259,16 @@ st.header("Historical Orders")
 @st.experimental_fragment(run_every=30)
 def get_order_history_():
     order_history = api_client.get_order_history()
+    
     # return order_history
     # order_history = get_order_history_() # details in Relative_Functions.py
-
+    order_history['openTime'] = pd.to_datetime(order_history['openTime'])
     st.dataframe(data=order_history,
                 use_container_width=True,
                 hide_index=None,
                 column_order=None,
                 column_config=None
+
                 )
 get_order_history_()
 
