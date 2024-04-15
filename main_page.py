@@ -202,7 +202,7 @@ def update_data():
 
 
 
-@st.experimental_fragment(run_every=10)
+@st.experimental_fragment(run_every=30)
 def account_summary():
     global updated_data
     summary_info_api = api_client.get_account_summary()
@@ -248,7 +248,7 @@ account_summary()
 # 4. P&L Curve vs Benchmark
 st.header("Strategy Performance")
 
-@st.experimental_fragment(run_every=10)
+@st.experimental_fragment(run_every=30)
 def show_performance():
     updated_data = pd.read_csv("./data.csv")
     updated_data['balance_return'] = updated_data['balance'].pct_change().add(1).cumprod()*100
@@ -261,8 +261,8 @@ show_performance()
 
 # 5. Order History
 st.header("Trading Details")
-# re-check the order history every 15 seconds
-@st.experimental_fragment(run_every=10)
+# re-check the order history every 30 seconds
+@st.experimental_fragment(run_every=30)
 def get_order_history_(): 
     order_history = api_client.get_order_history()
     
