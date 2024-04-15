@@ -196,12 +196,17 @@ with st.expander("Strategy Description"):
 # 3. Performance Metrics
 st.header("Performance Metrics")
 
-@st.experimental_fragment(run_every=30)
-def account_summary():
+# @st.experimental_fragment(run_every=10)
+def update_data():
+    api_client.update_data()
 
+
+
+@st.experimental_fragment(run_every=10)
+def account_summary():
+    global updated_data
     summary_info_api = api_client.get_account_summary()
 
-    #TODO update the hard-coded data source
     metrics_data = {"balance": round(float(summary_info_api['balance']),2),
                     "positionValue": round(float(summary_info_api['positionValue']),2),
                     "pl":   round(float(summary_info_api['pl']),2),
@@ -213,7 +218,7 @@ def account_summary():
                 }
     
     metrics_data_delta = api_delta.get_summary_info_delta(metrics_data)
-    
+    update_data()
 
     # data get from API
     col1, col2, col3, col4 = st.columns(4)
@@ -224,18 +229,18 @@ def account_summary():
     with col3:
         st.metric(label="Realized P&L", value=metrics_data["pl"], delta=metrics_data_delta["pl"])
     with col4:
-        st.metric(label="Unrealized P&L", value=metrics_data["unrealizedPL"], delta=metrics_data_delta["unrealizedPL"])
+        st.metric(label="Unrealized P&L", value=float(metrics_data["unrealizedPL"]), delta=round(metrics_data_delta["unrealizedPL"],2))
 
     # data get from calculation
     col5, col6, col7, col8 = st.columns(4)
     with col5:
-        st.metric(label="Annualized Return", value=metrics_data["annualized_return"], delta=metrics_data_delta["annualized_return"], delta_color="inverse")
+        st.metric(label="Annualized Return(%)", value=round(metrics_data["annualized_return"], 2), delta=round(metrics_data_delta["annualized_return"], 2), delta_color="inverse")
     with col6:
-        st.metric(label="Maximum Drawdown", value=metrics_data["max_drawdown"], delta=metrics_data_delta["max_drawdown"], delta_color="inverse")
+        st.metric(label="Maximum Drawdown(%)", value=round(metrics_data["max_drawdown"], 2), delta=round(metrics_data_delta["max_drawdown"], 2), delta_color="inverse")
     with col7:
-        st.metric(label="Sharpe Ratio", value=metrics_data["sharpe_ratio"], delta=metrics_data_delta["sharpe_ratio"], delta_color="inverse")
+        st.metric(label="Sharpe Ratio", value=round(metrics_data["sharpe_ratio"], 2), delta=round(metrics_data_delta["sharpe_ratio"], 2), delta_color="inverse")
     with col8:
-        st.metric(label="Win Rate(%)", value=metrics_data["win_rate"], delta=metrics_data_delta["win_rate"], delta_color="inverse")
+        st.metric(label="Win Rate(%)", value=round(metrics_data["win_rate"], 2), delta=round(metrics_data_delta["win_rate"], 2), delta_color="inverse")
 
 account_summary()
 
@@ -243,21 +248,22 @@ account_summary()
 # 4. P&L Curve vs Benchmark
 st.header("Strategy Performance")
 
-# the input P&L data shall be a dataframe like this:
-# | timestamps | P&L | Benchmark |
-# |------------|-----|-----------|
-# | 2022-01-01 | 100 | 200       |
-# | 2022-01-02 | 200 | 300       |
-# | ...        | ... | ...       |
-pnl_data = pd.DataFrame(np.random.randn(20, 3), columns=["timestamps", "P&L", "Benchmark"])
-st.line_chart(pnl_data, x="timestamps", y=["P&L", "Benchmark"])
+@st.experimental_fragment(run_every=10)
+def show_performance():
+    updated_data = pd.read_csv("./data.csv")
+    updated_data['balance_return'] = updated_data['balance'].pct_change().add(1).cumprod()*100
+    updated_data['benchmark_return'] = updated_data['benchmark'].pct_change().add(1).cumprod()*100
+    performance = updated_data[['balance_return', 'benchmark_return']]
+    performance['time'] = pd.to_datetime(updated_data['time'])
+    st.line_chart(performance, x="time", y=["balance_return", "benchmark_return"])
 
+show_performance()
 
 # 5. Order History
-st.header("Historical Orders")
+st.header("Trading Details")
 # re-check the order history every 15 seconds
-@st.experimental_fragment(run_every=30)
-def get_order_history_():
+@st.experimental_fragment(run_every=10)
+def get_order_history_(): 
     order_history = api_client.get_order_history()
     
     # return order_history
@@ -273,8 +279,8 @@ def get_order_history_():
 get_order_history_()
 
 
-# # 6. Other Visualizations
-# st.header("Performance Metrics")
-
-
 # ********************************************* main page end *******************************************
+
+
+
+    

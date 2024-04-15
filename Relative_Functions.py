@@ -6,6 +6,7 @@ import oandapyV20.endpoints.trades as trades
 import oandapyV20.endpoints.pricing as pricing
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.positions as positions
+import time
 
 access_token = "3f0f1b513d44797ff63c09d9da612561-6480f119d75e63cea1e420564d12b6f1"
 account_id = "101-003-28603773-001"
@@ -97,57 +98,109 @@ class OandaAPI:
         self.realized_orders = df
 
     def calculate_drawdowns(self):
-        df = self.realized_orders
-        df['peak'] = df['cumulative'].cummax()
-        df['drawdown'] = df['peak'] - df['cumulative']
+        # df = self.realized_orders
+        # df['peak'] = df['cumulative'].cummax()
+        # df['drawdown'] = df['peak'] - df['cumulative']
+        # df['drawdown_pct'] = (df['drawdown'] / df['peak']) * 100
+        # max_drawdown = df['drawdown'].max()
+        # return max_drawdown
+        df = pd.read_csv("./data.csv")
+        df['peak'] = df['balance'].cummax()
+        df['drawdown'] = df['peak'] - df['balance']
         df['drawdown_pct'] = (df['drawdown'] / df['peak']) * 100
-        max_drawdown = df['drawdown'].max()
+        max_drawdown = df['drawdown_pct'].max()
         return max_drawdown
 
     
     def calculate_annualised_returns(self, capital=100000):
-        try:
-            first_day = self.realized_orders['openTime'][0]
-            last_day = self.realized_orders['openTime'][-1]
-            total_trading_days = (last_day - first_day).days
-            if total_trading_days == 0:
-                return 0
-            current_balance = self.summary_info['balance']
-            annualised_returns = ( (current_balance/capital * 100 ) / int(total_trading_days) )* 252
+        # try:
+        #     first_day = self.realized_orders['openTime'][0]
+        #     last_day = self.realized_orders['openTime'][-1]
+        #     total_trading_days = (last_day - first_day).days
+        #     if total_trading_days == 0:
+        #         return 0
+        #     current_balance = self.summary_info['balance']
+        #     annualised_returns = ( (current_balance/capital * 100 ) / int(total_trading_days) )* 252
 
-            return annualised_returns
-        except:
-            return 28
+        #     return annualised_returns
+        # except:
+        #     return 28.5
+        df = pd.read_csv("./data.csv")
+        capital = df['balance'].iloc[1]
+        df['time'] = pd.to_datetime(df['time'])
+        first_day = df['time'].iloc[0]
+        last_day = df['time'].iloc[-1]
+        total_days = (last_day - first_day).days + 1
+        if total_days == 0:
+            return 0
+        print(df['balance'].iloc[-1], capital)
+        annualized_returns = ( ((df['balance'].iloc[-1]+df['unrealizedPL'].iloc[-1])/capital -1)/ int(total_days) )* 252 * 100
+        return annualized_returns
+        
 
     
     def calculate_sharpe_ratio(self):
-        try:
-            df = self.realized_orders
-            # The risk-free daily rate assume 1% annual rate
-            risk_free_rate = 0.01 / 365
-            # Calculate daily excess return
-            daily_excess_return = df['pct_change'] - risk_free_rate
-            # Calculate daily standard deviation
-            daily_std = np.std(daily_excess_return)
-            # Calculate daily Sharpe Ratio
-            daily_sharpe = daily_excess_return.mean() / daily_std
-            # Sharpe ratio
-            annual_sharpe = daily_sharpe * np.sqrt(252)  # sqrt(252) annualizes the standard deviation
-            annual_sharpe = 0.78
-            return annual_sharpe
-        except:
-            return 0.85
+        # try:
+        #     df = self.realized_orders
+        #     # The risk-free daily rate assume 1% annual rate
+        #     risk_free_rate = 0.01 / 365
+        #     # Calculate daily excess return
+        #     daily_excess_return = df['pct_change'] - risk_free_rate
+        #     # Calculate daily standard deviation
+        #     daily_std = np.std(daily_excess_return)
+        #     # Calculate daily Sharpe Ratio
+        #     daily_sharpe = daily_excess_return.mean() / daily_std
+        #     # Sharpe ratio
+        #     annual_sharpe = daily_sharpe * np.sqrt(252)  # sqrt(252) annualizes the standard deviation
+        #     annual_sharpe = 0.78
+        #     return annual_sharpe
+        # except:
+        #     return 0.85
+        df = pd.read_csv("./data.csv")
+        df['returns'] = df['balance'].pct_change()
+        risk_free_rate = 0.01 / 365
+        daily_excess_return = df['returns'] - risk_free_rate
+        daily_std = np.std(daily_excess_return)
+        daily_sharpe = daily_excess_return.mean() / daily_std
+        annual_sharpe = daily_sharpe * np.sqrt(252)
+        return annual_sharpe
+    
     
     def calculate_win_rate_from_trades(self):
-        trades = self.realized_orders
-        if len(trades) == 0:
-            return 0
+        # trades = self.realized_orders
+        # if len(trades) == 0:
+        #     return 0
 
-        wins = len(trades[trades['Realized P&L'] > 0])
-        losses = len(trades[trades['Realized P&L'] < 0])
+        # wins = len(trades[trades['Realized P&L'] > 0])
+        # losses = len(trades[trades['Realized P&L'] < 0])
+        # total_trades = wins + losses
+        # win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
+        # return win_rate
+        df = pd.read_csv("./data.csv")
+        df['returns'] = df['balance'].pct_change()
+        wins = len(df[df['returns'] > 0])
+        losses = len(df[df['returns'] < 0])
         total_trades = wins + losses
         win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
         return win_rate
+    
+
+    def update_data(self):
+        db = pd.read_csv("./data.csv")
+        new_data = {'time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+                    'balance': float(self.summary_info['balance']),
+                    'unrealizedPL': self.summary_info['unrealizedPL'],
+                    'pl': self.summary_info['pl'],
+                    'benchmark': self.prices['EUR_USD']
+                    }
+        new_data_df = pd.DataFrame([new_data])
+        db = pd.concat([db, new_data_df], ignore_index=True)
+        db.to_csv("./data.csv", index=False)
+
+        
+
+        
+        
  
     
 class Delta_Data:
