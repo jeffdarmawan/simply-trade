@@ -234,13 +234,13 @@ def account_summary():
     # data get from calculation
     col5, col6, col7, col8 = st.columns(4)
     with col5:
-        st.metric(label="Annualized Return(%)", value=round(metrics_data["annualized_return"], 2), delta=round(metrics_data_delta["annualized_return"], 2), delta_color="inverse")
+        st.metric(label="Annualized Return(%)", value=round(metrics_data["annualized_return"], 2), delta=round(metrics_data_delta["annualized_return"], 2))
     with col6:
-        st.metric(label="Maximum Drawdown(%)", value=round(metrics_data["max_drawdown"], 2), delta=round(metrics_data_delta["max_drawdown"], 2), delta_color="inverse")
+        st.metric(label="Maximum Drawdown(%)", value=round(metrics_data["max_drawdown"], 2), delta=round(metrics_data_delta["max_drawdown"], 2))
     with col7:
-        st.metric(label="Sharpe Ratio", value=round(metrics_data["sharpe_ratio"], 2), delta=round(metrics_data_delta["sharpe_ratio"], 2), delta_color="inverse")
+        st.metric(label="Sharpe Ratio", value=round(metrics_data["sharpe_ratio"], 2), delta=round(metrics_data_delta["sharpe_ratio"], 2))
     with col8:
-        st.metric(label="Win Rate(%)", value=round(metrics_data["win_rate"], 2), delta=round(metrics_data_delta["win_rate"], 2), delta_color="inverse")
+        st.metric(label="Win Rate(%)", value=round(metrics_data["win_rate"], 2), delta=round(metrics_data_delta["win_rate"], 2))
 
 account_summary()
 
@@ -251,11 +251,13 @@ st.header("Strategy Performance")
 @st.experimental_fragment(run_every=30)
 def show_performance():
     updated_data = pd.read_csv("./data.csv")
-    updated_data['balance_return'] = updated_data['balance'].pct_change().add(1).cumprod()*100
-    updated_data['benchmark_return'] = updated_data['benchmark'].pct_change().add(1).cumprod()*100
+    updated_data['balance_return'] = updated_data['balance'].pct_change().add(1).cumprod()
+    updated_data['benchmark_return'] = updated_data['benchmark'].pct_change().add(1).cumprod()
     performance = updated_data[['balance_return', 'benchmark_return']]
+    performance['strategy_return'] = (performance['balance_return'] - 1) * 100
+    performance['benchmark_return'] = (performance['benchmark_return'] - 1) * 100
     performance['time'] = pd.to_datetime(updated_data['time'])
-    st.line_chart(performance, x="time", y=["balance_return", "benchmark_return"])
+    st.line_chart(performance, x="time", y=["strategy_return", "benchmark_return"])
 
 show_performance()
 
