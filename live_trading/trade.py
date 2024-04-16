@@ -43,8 +43,8 @@ model_15mins_features = ['DPO_20', 'THERMO_20_2_0.5', 'CFO_9', 'TRUERANGE_1', 'P
 default_take_profit = 0.0009
 default_stop_loss = 0.0003
 
-target_pnl = 105000 
-stoploss_pnl = 95000
+target_pnl = 10000 
+stoploss_pnl = -5000
 
 # Setup
 default_usd_pairs = ["EUR_USD","USD_JPY", "GBP_USD","AUD_USD"]
@@ -74,6 +74,7 @@ def trade_attempt(
     print("Model=", model)
     print("Take Profit=", take_profit)
     print("Stop Loss=", stop_loss)
+    status: Status = Status.Active
     if status == Status.Active:       
         try:
             print("Running strategy...")
@@ -132,7 +133,7 @@ def trade_attempt(
 
                 elif position_type == "Long":
                     if signal == 1: 
-                        print ("Hold the trade")
+                        print ("Trade Ongoing")
                         
                     elif signal == -1: 
                         close_position = close_position(instrument, long_units='ALL', short_units='ALL')
@@ -152,7 +153,7 @@ def trade_attempt(
                         place_market_order(instrument, order_type, quantity, take_profit_price, stop_loss_price)
 
                     elif signal == -1: 
-                        print ("Hold the trade")
+                        print ("Trade Ongoing")
                 else:
                     pass  
                 positions_dict = get_open_positions()
@@ -164,10 +165,7 @@ def trade_attempt(
             
             positions_dict = get_open_positions()
 
-            long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)    
-            print("====================================================================================")
-            print(f" Target:  {target_pnl:.2f} | StopLoss: {stoploss_pnl :.2f} | PNL:  {total_pnl:.2f} ")
-            print("====================================================================================") 
+            long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)   
             #calculate returns 
             cycle_datetime = datetime.now().date()
             trade_days = (open_datetime - cycle_datetime).days
@@ -178,7 +176,11 @@ def trade_attempt(
             #Calculate Win-rate
             closed_trades = fetch_closed_trades()
             win_rate = calculate_win_rate_from_trades(closed_trades)
-            #print(f"Win Rate: {win_rate:.2f}%")
+            print("Summary") 
+            print("====================================================================================")
+            print(f" Target:  {target_pnl:.2f} | StopLoss: {stoploss_pnl :.2f} | PNL:  {total_pnl:.2f} ")
+            print(f"Win Rate: {win_rate:.2f}%")
+            print("====================================================================================") 
 
             #Update Time series PNL
             time_series = []
@@ -186,6 +188,20 @@ def trade_attempt(
             pnl = pnl_all_positions()
             time_series.append(datetime.now())
             pnl_series.append(pnl)
+            if total_pnl > target_pnl:
+                print("Targeted Profit hit") 
+                status == Status.Stop
+                print("Closing all Trades")
+                close_all_trades(client, accountID)
+                print("Current balance: {:.2f}".format(get_current_balance()))
+            elif total_pnl < stoploss_pnl:
+                print("Stop loss hit") 
+                status == Status.Stop
+                print("Closing all Trades")
+                close_all_trades(client, accountID)
+                print("Current balance: {:.2f}".format(get_current_balance()))
+            else:
+                pass
 
             time.sleep(trade_cycle)  # Wait for a minute before the next cycle
 
@@ -211,3 +227,5 @@ def trade_attempt(
         print("Current balance: {:.2f}".format(get_current_balance()))
     
     print("--- Trading attempt: END ---")
+
+trade_attempt(Status.Active)

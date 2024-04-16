@@ -60,7 +60,6 @@ def get_quantity(instrument, trade_direction):
 
     trade_currency_2 = instrument[4:]
     position_size=None
-    # A more complex calculation can be done 
 
     if "USD" in trade_currency_2:
         position_size = 100000
@@ -81,17 +80,17 @@ def get_pnl_price(instrument, trade_direction,take_profit,stop_loss):
     current_price = get_current_price(instrument)
     take_profit_percentage = take_profit
     stop_loss_percentage = stop_loss
-    
+    #print(trade_direction)
     # if trade_direction == "BUY":
     if trade_direction == 1:
         take_profit_price = round(current_price * (1 + take_profit_percentage), get_instrument_precision(instrument))
         stop_loss_price = round(current_price * (1 - stop_loss_percentage), get_instrument_precision(instrument))
     # trade_direction == "SELL"
-    elif trade_direction == "-1":
+    elif trade_direction == -1:
         take_profit_price = round(current_price * (1 - take_profit_percentage), get_instrument_precision(instrument))
         stop_loss_price = round(current_price * (1 + stop_loss_percentage), get_instrument_precision(instrument))
     else:
-        print("Hold")
+        print("No Trade Signal, Hold")
         return
     #print(stop_loss_price, take_profit_price)
 
@@ -108,7 +107,7 @@ def check_instrument_positions(open_positions,instrument):
     if open_positions:
 
         for pos in open_positions:
-
+            #print(pos)
             if instrument == pos['instrument']:
                 if float(pos['long']['units']) > 0 : 
 
@@ -119,10 +118,13 @@ def check_instrument_positions(open_positions,instrument):
                     return position_type
                 else:
                     position_type = "None"
+                    return position_type
             else:
                 position_type = "None"
+                return position_type
     else:
         position_type = "None"
+        return position_type
     return position_type
 
 def close_position(instrument, long_units=None, short_units=None):
@@ -135,7 +137,6 @@ def close_position(instrument, long_units=None, short_units=None):
         "shortUnits": str(short_units) if short_units else "0"  # Converts None or unspecified to '0'
     }
     
-    # Handle the 'ALL' case separately
     if long_units == 'ALL':
         data["longUnits"] = 'ALL'
     if short_units == 'ALL':
