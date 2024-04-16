@@ -211,7 +211,7 @@ def trade_attempt(
     elif status == Status.Inactive:
         
         try: 
-            print("Trade is still open")
+            print("Trades are ongoing. System has paused.")
 
             positions_dict = get_open_positions()
             long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)    
@@ -222,7 +222,7 @@ def trade_attempt(
             print(f"An error occurred: {e}")
 
     else: 
-        print("Closing all Trades")
+        print("Closing all trade. System has stopped.")
         close_all_trades(client, accountID)
         print("Current balance: {:.2f}".format(get_current_balance()))
     
