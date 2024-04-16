@@ -223,7 +223,7 @@ def close_all_trades(client, account_id):
     # Get a list of all open trades for the account
     trades_request = trades.OpenTrades(accountID=account_id)
     response = client.request(trades_request)
-    print(response)
+    #print(response)
     if len(response['trades']) > 0:
         for trade in response['trades']:
             trade_id = trade['id']

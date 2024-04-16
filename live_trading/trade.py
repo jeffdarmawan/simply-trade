@@ -227,5 +227,3 @@ def trade_attempt(
         print("Current balance: {:.2f}".format(get_current_balance()))
     
     print("--- Trading attempt: END ---")
-
-trade_attempt(Status.Stop)
