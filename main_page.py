@@ -17,7 +17,7 @@ st.set_page_config(layout="wide")
 
 # initialize state variables
 if 'current_pair' not in st.session_state:
-    st.session_state['current_pair'] = "BTC_USD"
+    st.session_state['current_pair'] = "EUR_USD"
 
 if 'trading_status' not in st.session_state:
     st.session_state['trading_status'] = Status.Unknown
@@ -109,8 +109,8 @@ selected_model = st.sidebar.selectbox(
 )
 
 # rr_ratio = st.sidebar.number_input("Risk/Reward ratio", value=2, placeholder="Insert a number", disabled=disable_button("start_button"))
-take_profit = st.sidebar.number_input("Take Profit", value=0.002, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
-stop_loss = st.sidebar.number_input("Stop Loss", value=0.001, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
+take_profit = st.sidebar.number_input("Take Profit", value=0.0003, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
+stop_loss = st.sidebar.number_input("Stop Loss", value=0.0001, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
 
 def trading_buttons_callback(status: Status):
     global selected_model, take_profit, stop_loss
@@ -264,7 +264,7 @@ show_performance()
 # 5. Order History
 st.header("Trading Details")
 # re-check the order history every 30 seconds
-@st.experimental_fragment(run_every=30)
+@st.experimental_fragment(run_every=60)
 def get_order_history_(): 
     order_history = api_client.get_order_history()
     

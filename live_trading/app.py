@@ -23,16 +23,32 @@ class LiveTrading:
             print("current status: ", self.get_status())
             if self.get_status() == Status.Active:
                 params = self.get_params()
-
                 trade_attempt(
                     # check if key params exist first
                     model=params['model'],
                     take_profit=params['take_profit'],
                     stop_loss=params['stop_loss'],
                     status=self.status)
+            elif self.get_status() == Status.Stop:
+                params = self.get_params()
+
+                trade_attempt(
+                    # check if key params exist first
+                    #model=params['model'],
+                    #take_profit=params['take_profit'],
+                    #stop_loss=params['stop_loss'],
+                    status=self.status)
+
+            elif self.get_status() == Status.Inactive:
+                params = self.get_params()
+                trade_attempt(
+                    # check if key params exist first
+                    #model=params['model'],
+                    #take_profit=params['take_profit'],
+                    #stop_loss=params['stop_loss'],
+                    status=self.status)
                 
-            
-            time.sleep(2)
+            time.sleep(5)
 
     def get_status(self):
         with self.status_lock:

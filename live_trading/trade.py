@@ -69,13 +69,18 @@ def trade_attempt(
         trade_cycle: int = default_trade_cycle,
         order_type: str = default_order_type,
         lookback_count: int = default_lookback_count):
-    print("--- Trading attempt: START ---")
-    print("Configurable variables: ")
-    print("Model=", model)
-    print("Take Profit=", take_profit)
-    print("Stop Loss=", stop_loss)
+    # print("--- Trading attempt: START ---")
+    # print("Configurable variables: ")
+    # print("Model=", model)
+    # print("Take Profit=", take_profit)
+    # print("Stop Loss=", stop_loss)
     if status == Status.Active:       
         try:
+            print("--- Trading attempt: START ---")
+            print("Configurable variables: ")
+            print("Model=", model)
+            print("Take Profit=", take_profit)
+            print("Stop Loss=", stop_loss)
             print("Running strategy...")
             opening_balance = get_current_balance()
             start_time = datetime.now()
@@ -211,7 +216,7 @@ def trade_attempt(
     elif status == Status.Inactive:
         
         try: 
-            print("Trade is still open")
+            print("Trades are ongoing. System has paused.")
 
             positions_dict = get_open_positions()
             long_pnl, short_pnl, total_pnl = calculate_total_unrealised_pnl(positions_dict)    
@@ -222,7 +227,7 @@ def trade_attempt(
             print(f"An error occurred: {e}")
 
     else: 
-        print("Closing all Trades")
+        print("Closing all trade. System has stopped.")
         close_all_trades(client, accountID)
         print("Current balance: {:.2f}".format(get_current_balance()))
     
