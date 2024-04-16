@@ -109,8 +109,8 @@ selected_model = st.sidebar.selectbox(
 )
 
 # rr_ratio = st.sidebar.number_input("Risk/Reward ratio", value=2, placeholder="Insert a number", disabled=disable_button("start_button"))
-take_profit = st.sidebar.number_input("Take Profit", value=0.002, step=1e-3, format="%.3f", placeholder="Insert a number", disabled=disable_button("start_button"))
-stop_loss = st.sidebar.number_input("Stop Loss", value=0.001, step=1e-3, format="%.3f", placeholder="Insert a number", disabled=disable_button("start_button"))
+take_profit = st.sidebar.number_input("Take Profit", value=0.002, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
+stop_loss = st.sidebar.number_input("Stop Loss", value=0.001, step=1e-5, format="%.5f", placeholder="Insert a number", disabled=disable_button("start_button"))
 
 def trading_buttons_callback(status: Status):
     global selected_model, take_profit, stop_loss
