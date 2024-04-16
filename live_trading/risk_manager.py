@@ -107,10 +107,8 @@ def check_instrument_positions(open_positions,instrument):
     if open_positions:
 
         for pos in open_positions:
-            #print(pos)
             if instrument == pos['instrument']:
                 if float(pos['long']['units']) > 0 : 
-
                     position_type = "Long"
                     return position_type
                 elif float(pos['short']['units']) < 0 :
@@ -118,32 +116,40 @@ def check_instrument_positions(open_positions,instrument):
                     return position_type
                 else:
                     position_type = "None"
-                    return position_type
+
             else:
                 position_type = "None"
-                return position_type
     else:
         position_type = "None"
-        return position_type
+    print(position_type)
     return position_type
 
-def close_position(instrument, long_units=None, short_units=None):
+def close_position(instrument, long_units = None, short_units = None):
     """
     Close positions for a specific instrument with flexible unit specifications.
 
     """
-    data = {
-        "longUnits": str(long_units) if long_units else "0",  # Converts None or unspecified to '0'
-        "shortUnits": str(short_units) if short_units else "0"  # Converts None or unspecified to '0'
-    }
-    
-    if long_units == 'ALL':
-        data["longUnits"] = 'ALL'
-    if short_units == 'ALL':
-        data["shortUnits"] = 'ALL'
+    if long_units:
+        data = {
+            "longUnits": str(long_units) if long_units else '0' ,# Converts None or unspecified to '0'
+        }
+    elif short_units:
+        data = {
+            "shortUnits": str(short_units) if short_units else '0' # Converts None or unspecified to '0'
+        }
+    else:
+        data = {
+            "longUnits": str(long_units) if long_units else '0' ,# Converts None or unspecified to '0'
+            "shortUnits": str(short_units) if short_units else '0' # Converts None or unspecified to '0'
+        }
 
+    # if long_units == 'ALL':
+    #     data["longUnits"] = 'ALL'
+    # if short_units == 'ALL':
+    #     data["shortUnits"] = 'ALL'
     request = positions.PositionClose(accountID=account_id, instrument=instrument, data=data)
     close_response = client.request(request)
+
     if "errorMessage" in close_response:
         print("Error occurred closing order:", close_response["errorMessage"])
     else:
@@ -217,7 +223,7 @@ def close_all_trades(client, account_id):
     # Get a list of all open trades for the account
     trades_request = trades.OpenTrades(accountID=account_id)
     response = client.request(trades_request)
-
+    print(response)
     if len(response['trades']) > 0:
         for trade in response['trades']:
             trade_id = trade['id']

@@ -74,7 +74,6 @@ def trade_attempt(
     print("Model=", model)
     print("Take Profit=", take_profit)
     print("Stop Loss=", stop_loss)
-    status: Status = Status.Active
     if status == Status.Active:       
         try:
             print("Running strategy...")
@@ -113,7 +112,6 @@ def trade_attempt(
                 signal = price_df["prediction_on_next_close"].iloc[-1]
                 positions_dict = get_open_positions()
                 position_type = check_instrument_positions(positions_dict,instrument)
-
                 #Determine position and create market order
 
                 if position_type == "None": 
@@ -136,7 +134,8 @@ def trade_attempt(
                         print ("Trade Ongoing")
                         
                     elif signal == -1: 
-                        close_position = close_position(instrument, long_units='ALL', short_units='ALL')
+                        print("Signal Changes, Close Long Order and Open New Short Order")
+                        close_position(instrument, long_units='ALL')
                         quantity = get_quantity(instrument,signal)
                         pnl_price = get_pnl_price(instrument, signal,take_profit,stop_loss)
                         take_profit_price = pnl_price[0]
@@ -144,8 +143,9 @@ def trade_attempt(
                         place_market_order(instrument, order_type, quantity, take_profit_price, stop_loss_price)
 
                 elif position_type == "Short":
-                    if signal == 1: 
-                        close_position = close_position(instrument, long_units='ALL', short_units='ALL')
+                    if signal == 1:
+                        print("Signal Changes, Close Short Order and Open New Long Order")
+                        close_position(instrument, short_units='ALL')
                         quantity = get_quantity(instrument,signal)
                         pnl_price = get_pnl_price(instrument, signal,take_profit,stop_loss)
                         take_profit_price = pnl_price[0]
@@ -228,4 +228,4 @@ def trade_attempt(
     
     print("--- Trading attempt: END ---")
 
-trade_attempt(Status.Active)
+trade_attempt(Status.Stop)
