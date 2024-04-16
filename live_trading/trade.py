@@ -69,13 +69,18 @@ def trade_attempt(
         trade_cycle: int = default_trade_cycle,
         order_type: str = default_order_type,
         lookback_count: int = default_lookback_count):
-    print("--- Trading attempt: START ---")
-    print("Configurable variables: ")
-    print("Model=", model)
-    print("Take Profit=", take_profit)
-    print("Stop Loss=", stop_loss)
+    # print("--- Trading attempt: START ---")
+    # print("Configurable variables: ")
+    # print("Model=", model)
+    # print("Take Profit=", take_profit)
+    # print("Stop Loss=", stop_loss)
     if status == Status.Active:       
         try:
+            print("--- Trading attempt: START ---")
+            print("Configurable variables: ")
+            print("Model=", model)
+            print("Take Profit=", take_profit)
+            print("Stop Loss=", stop_loss)
             print("Running strategy...")
             opening_balance = get_current_balance()
             start_time = datetime.now()
